@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#170006" id="themeColor" />
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="stylesheet" href="https://use.typekit.net/bwp0bbg.css">
+<title>+bureau — SABI</title>
+<meta name="description" content="+bureau, a curated business directory by SABI London.">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#FAFBE3;--text:#211D1D;--border:#423A3A;--dark:#170006;
+  --tint:rgba(33,29,29,.07);--sel:rgba(183,184,168,.4);
+  --font-body:'owners-text',sans-serif;--font-mono:'gemeli-mono',ui-monospace,monospace;
+  --font-logo:'all-round-gothic',sans-serif;--gutter:32px;
+}
+::selection{background:var(--sel)}
+html{-webkit-text-size-adjust:100%;background:var(--bg)}
+body{font-family:var(--font-body);font-weight:350;background:var(--bg);color:var(--text);min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
+a{color:var(--text)}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+.mono{font-family:var(--font-mono);font-weight:300}
+.up{text-transform:uppercase}
+
+/* strip */
+.strip{height:calc(36px + env(safe-area-inset-top,0px));padding-top:env(safe-area-inset-top,0px);box-shadow:0 -100vh 0 var(--dark);position:relative;z-index:1;background:var(--dark);color:var(--bg);display:grid;place-items:center;text-align:center;padding:0 var(--gutter);font-family:var(--font-mono);font-weight:300;font-size:12.5px;letter-spacing:1.6px;text-transform:uppercase}
+.strip span{grid-area:1/1;opacity:0}
+/* 16s loop: tagline ~8s, fades out, then "powered by" fades in for ~8s, and round again */
+.strip .s1{animation:stripA 16s ease-in-out infinite}
+.strip .s2{animation:stripB 16s ease-in-out infinite}
+@keyframes stripA{0%{opacity:0}4%{opacity:1}46%{opacity:1}50%,100%{opacity:0}}
+@keyframes stripB{0%,50%{opacity:0;visibility:hidden}54%,96%{opacity:1;visibility:visible}100%{opacity:0;visibility:hidden}}
+@media(prefers-reduced-motion:reduce){.strip .s1{animation:none;opacity:1}.strip .s2{animation:none;opacity:0;visibility:hidden}}
+/* PC: no animation - tagline on the left, "powered by" on the right */
+@media(min-width:1001px){
+  .strip{display:flex;justify-content:space-between;align-items:center;text-align:left}
+  .strip .s1,.strip .s2{animation:none;opacity:1;visibility:visible}
+}
+.strip a{color:var(--bg);text-decoration:underline;text-underline-offset:3px}
+
+/* header */
+.head{display:flex;justify-content:space-between;align-items:center;padding:20px var(--gutter);border-bottom:.5px solid var(--border)}
+.logo{font-family:var(--font-logo);font-weight:400;font-size:30px;line-height:1;letter-spacing:0;text-transform:lowercase;text-decoration:none}
+.nav{display:flex;gap:36px}
+.nav a,.nav button{font-weight:500;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none}
+.nav .on{opacity:.4;pointer-events:none}
+.head-r{display:flex;justify-content:flex-end;gap:28px;align-items:center}
+.head-r button,.head-r a{font-weight:500;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none}
+.count-pill{font-family:var(--font-mono);font-weight:300;font-size:11px;background:var(--tint);padding:3px 7px;border-radius:5px;margin-left:6px;letter-spacing:1px}
+a:hover,button:hover{opacity:.7}
+
+main{flex:1;display:flex;flex-direction:column}
+.view{display:none;flex:1}
+.view.on{display:flex}
+
+/* ── Search: newspaper columns, wide-bleed lists ── */
+/* Search page is a fixed-height app screen: strip, header and the results panel never scroll; only the categories/tags pane does */
+body.is-search{height:100vh;height:100dvh;overflow:hidden;overscroll-behavior-x:none}
+body.is-search>.foot{display:none}
+body.is-search main,body.is-search .view.on{min-height:0}
+.search{display:grid;grid-template-columns:minmax(278px,25.4%) 1fr;grid-template-rows:minmax(0,1fr);flex:1;width:100%;min-height:0;overflow:hidden}
+.rail{border-right:.5px solid var(--border);padding:0 var(--gutter);overflow-y:hidden;overflow-x:hidden;overscroll-behavior-x:none;min-height:0}
+.rail-in{padding:32px 0 28px;display:flex;flex-direction:column;gap:28px}
+.tag-label{display:inline-block;align-self:flex-start;background:var(--tint);font-family:var(--font-mono);font-weight:400;font-size:11px;letter-spacing:1.3px;line-height:1.2;text-transform:uppercase;padding:8px 14px;border-radius:6px}
+.intro{font-size:15px;line-height:1.5;font-weight:400;max-width:30ch}
+.counter{margin-top:0}
+.counter-n{font-family:var(--font-body);font-weight:300;font-size:clamp(68px,calc(9vw - 4px),128px);line-height:.9;letter-spacing:-2px;font-variant-numeric:tabular-nums}
+.counter-l{font-family:var(--font-mono);font-weight:300;font-size:12px;letter-spacing:1.3px;text-transform:uppercase;margin-top:10px}
+.chosen{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+#chosen:empty{display:none}   /* one chip per row */
+.chip{display:inline-flex;gap:8px;align-items:center;font-family:var(--font-mono);font-weight:300;font-size:11px;letter-spacing:1px;text-transform:uppercase;background:var(--text);color:var(--bg);padding:6px 9px;border-radius:5px}
+.chip .x{flex:none;display:block;opacity:.7}
+.chip.ghost{background:transparent;color:var(--text);opacity:.5;padding-left:0}
+.go{font-weight:500;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;padding:14px 22px;border-radius:6px;color:var(--bg);background:#2E000D;border:.5px solid #2E000D;display:flex;justify-content:space-between;align-items:center;gap:20px}
+.go:hover{opacity:1;background:#1f0009}
+.go[hidden]{display:none}
+.go .mag{flex:none;display:block}
+.head-r .go-head{font-weight:400;text-transform:lowercase;padding:8px 13px;gap:5.5px;font-size:12.1px;letter-spacing:1.05px;border-radius:4px}   /* 70% of the previous 13px / 11px-padding button */
+.go[disabled]{opacity:.35;cursor:not-allowed}
+.hint{font-family:var(--font-mono);font-weight:300;font-size:11px;letter-spacing:.5px;line-height:1.5;margin-top:-14px}
+.hint:empty{display:none}
+.hint.dim{opacity:.5}
+
+.fields{padding:32px var(--gutter) 0;display:flex;flex-direction:column;gap:44px;overflow-y:auto;overflow-x:hidden;overscroll-behavior-x:none;min-height:0}
+.fields .foot{margin:0 calc(var(--gutter) * -1);flex:none}
+.sec-h{display:flex;justify-content:space-between;align-items:baseline;border-bottom:.5px solid var(--border);padding-bottom:12px;margin-bottom:6px}
+.sec-h h2{font-family:var(--font-mono);font-weight:300;font-size:12px;letter-spacing:1.3px;text-transform:uppercase}
+.sec-h span{font-family:var(--font-mono);font-weight:300;font-size:11px;letter-spacing:1px;opacity:.6}
+.cat-list{display:flex;flex-wrap:wrap;gap:8px;padding-top:12px}
+.opt{display:flex;gap:14px;align-items:baseline;text-align:left;width:100%;border-bottom:.5px solid var(--border);padding:12px 8px;font-family:var(--font-mono);font-weight:300;font-size:12.5px;letter-spacing:1.2px;text-transform:uppercase;transition:opacity .15s}
+.opt .n{font-size:11px;opacity:.55;min-width:2ch}
+.opt:hover{background:var(--tint);opacity:1}
+.opt[aria-pressed=true]{background:var(--text);color:var(--bg);opacity:1}
+.opt[aria-pressed=true]:hover{background:var(--text)}
+.opt[disabled]{opacity:.28;cursor:not-allowed;pointer-events:none}
+.opt[aria-pressed=true][disabled]{opacity:1;pointer-events:auto;cursor:pointer;background:transparent;color:var(--text);outline:1px dashed var(--border);outline-offset:-3px;text-decoration:line-through}
+.opt:focus-visible,.go:focus-visible,.nav a:focus-visible{outline:2px solid var(--text);outline-offset:-2px}
+.tag-list{display:flex;flex-wrap:wrap;gap:8px;padding-top:12px}
+.pill{font-family:var(--font-mono);font-weight:300;font-size:11.5px;letter-spacing:1px;text-transform:uppercase;border:.5px solid var(--border);border-radius:6px;padding:8px 12px;transition:opacity .15s}
+.pill:hover{background:var(--tint);opacity:1}
+.pill[aria-pressed=true]{background:var(--text);color:var(--bg)}
+.pill.off{opacity:.3}
+.pill.off:hover{opacity:.6}
+.pill[disabled]{opacity:.28;cursor:not-allowed;pointer-events:none}
+.pill[aria-pressed=true][disabled]{opacity:1;pointer-events:auto;cursor:pointer;background:transparent;color:var(--text);text-decoration:line-through;border-style:dashed}
+
+/* ── Results ── */
+.wide{width:100%;padding:32px var(--gutter);display:flex;flex-direction:column;gap:28px}
+.r-top{margin-bottom:6px;display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap}
+.r-top .chosen{max-width:640px;align-items:flex-end}
+.back{font-weight:400;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;border-bottom:.5px solid var(--border);padding-bottom:2px;white-space:nowrap;display:inline-block}
+.back.back-top{display:none}
+.r-title{font-weight:400;font-size:clamp(15px,calc(3vw - 6px),19px);letter-spacing:2px;text-transform:uppercase;line-height:1.1;margin-top:20px}
+.rows{border-top:.5px solid var(--border)}
+.row{display:grid;grid-template-columns:minmax(160px,1.1fr) 2.4fr minmax(180px,1.1fr) minmax(130px,.8fr) 44px;gap:var(--gutter);align-items:baseline;padding:18px 8px;border-bottom:.5px solid var(--border);text-decoration:none;width:100%;text-align:left}
+.row:hover{background:var(--tint);opacity:1}
+.row .m{font-family:var(--font-mono);font-weight:300;font-size:11.5px;letter-spacing:1px;text-transform:uppercase}
+.row .nm{font-weight:500;font-size:15px;letter-spacing:.2px}
+.row .ds{font-weight:300;font-size:14px;line-height:1.55}
+.row .m{opacity:.8;line-height:1.5}
+.row .hql{display:none}   /* the "HQ" label only shows on phone, where there is no column header */
+.row .bk{justify-self:end;font-family:var(--font-mono);font-size:16px}
+.rows .row.hd{font-family:var(--font-mono);font-size:11px;letter-spacing:1.3px;text-transform:uppercase;opacity:.6;padding-top:12px;padding-bottom:12px;pointer-events:none}
+#sentinel{height:1px}
+.empty{font-family:var(--font-mono);font-weight:300;font-size:13px;letter-spacing:1px;text-transform:uppercase;padding:60px 0;text-align:center}
+
+/* ── Profile ── */
+.prof{display:grid;grid-template-columns:minmax(200px,22%) 1fr minmax(260px,30%);width:100%;flex:1}
+.prof>div{padding:32px var(--gutter)}
+.prof>div+div{border-left:.5px solid var(--border)}
+.p-name{font-weight:400;font-size:clamp(21px,calc(3.4vw - 8px),32px);line-height:1.05;letter-spacing:.5px;margin:20px 0 24px}
+.p-desc{font-weight:300;font-size:14px;line-height:1.75;max-width:60ch;white-space:pre-line}
+.imprint dl{display:grid;grid-template-columns:110px 1fr;row-gap:14px;column-gap:16px;margin-top:20px}
+.imprint dt{font-family:var(--font-mono);font-weight:300;font-size:11px;letter-spacing:1.2px;text-transform:uppercase;opacity:.6;padding-top:2px}
+.imprint dd{font-family:var(--font-mono);font-weight:300;font-size:12px;letter-spacing:.8px;text-transform:uppercase;line-height:1.6}
+.imprint .sp{height:12px;grid-column:1/-1}
+.bm{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;margin-top:28px;font-weight:500;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;border:.5px solid var(--border);border-radius:6px;padding:13px 18px}
+.bm[aria-pressed=true]{background:var(--text);color:var(--bg)}
+.sec-title{font-family:var(--font-mono);font-weight:300;font-size:14px;line-height:1.1;letter-spacing:1.3px;text-transform:uppercase;color:var(--ink,#211D1D);opacity:1}
+.sim{margin-top:14px}
+.p-meta{margin-top:0}
+.p-chips{margin-top:34px}
+.reset{font-family:var(--font-mono);font-weight:300;font-size:11px;letter-spacing:1px;opacity:1;text-transform:lowercase;background:none;border:0;border-bottom:.5px solid var(--border);padding:0 0 2px;margin-top:0;color:inherit;cursor:pointer;align-self:flex-start}
+.reset[hidden]{display:none}
+@media(max-width:1000px){.p-chips{flex-direction:row;flex-wrap:wrap;gap:8px;margin-top:0;order:1}
+  .prof>div:nth-child(1){display:flex;flex-direction:column}
+  .prof>div:nth-child(1) .back{order:2;align-self:flex-start;margin-top:24px}
+  .back.back-top{display:inline-block;margin:0 0 64px}
+  .prof>div.no-search{display:none}}   /* no saved search: the top link is enough, drop the bottom one */
+.p-site{font-family:var(--font-mono);font-weight:300;font-size:12px;letter-spacing:.8px;margin:0 0 28px}
+.sim-i{display:grid;grid-template-columns:1fr;padding:14px 0;border-bottom:.5px solid var(--border);text-decoration:none;text-align:left;width:100%}
+.sim-i:first-of-type{border-top:.5px solid var(--border)}
+.sim-i .i{font-family:var(--font-mono);font-weight:300;font-size:11px;opacity:.6;padding-top:3px}
+.sim-i b{font-weight:500;font-size:15px}
+.sim-i p{font-family:var(--font-mono);font-weight:300;font-size:11px;letter-spacing:.8px;text-transform:uppercase;opacity:.7;margin-top:5px;line-height:1.5}
+
+/* footer */
+.foot{padding:28px var(--gutter);border-top:.5px solid var(--border);display:flex;justify-content:space-between;gap:2rem;flex-wrap:wrap;font-size:13px}
+.foot p{font-weight:400;font-size:15px;line-height:1.5}
+.foot .c{font-family:var(--font-mono);font-weight:300;font-size:13px;letter-spacing:.5px;margin-top:.6rem}
+.foot nav{display:flex;gap:2.5rem;align-items:flex-start}
+.foot nav a{font-weight:300;font-size:13px}
+
+@media(min-width:1001px){
+  .row .ds{margin-right:128px}   /* Details -> Ethos gap: 32px column gap + 128px = 160px */
+  .row .bk{font-size:0;line-height:0;align-self:start;width:22px;height:16px;position:relative;justify-self:end}
+  .row:not(.hd) .bk::after{content:'';position:absolute;right:0;top:0;width:22px;height:16px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 16'%3E%3Cpath d='M1 8.4H20.5M13.5 1.6 20.5 8.4 13.5 15.2' fill='none' stroke='black' stroke-width='1.25'/%3E%3C/svg%3E") no-repeat center/100% 100%;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 16'%3E%3Cpath d='M1 8.4H20.5M13.5 1.6 20.5 8.4 13.5 15.2' fill='none' stroke='black' stroke-width='1.25'/%3E%3C/svg%3E") no-repeat center/100% 100%}   /* bigger arrow without pushing the row text down */
+}
+@media(max-width:1000px){
+  /* Phone / tablet: header and the search-results panel stay frozen at the top; only categories and tags scroll beneath */
+  .head{position:sticky;top:0;z-index:30;background:var(--bg);height:52px;padding-top:0;padding-bottom:0}
+  .search{display:flex;flex-direction:column}
+  .rail{flex:none;border-right:0;border-bottom:.5px solid var(--border)}
+  .rail-in{padding-bottom:32px}   /* space above the panel's bottom line = space below the header line */
+  .fields{flex:1}
+  #resetBtn{margin-top:-7px}   /* gap above = gap under 'search results' */
+  #chosen{margin-top:-7px}   /* chips sit at exactly the same height as on the results page */
+  #chosen,.r-top .chosen{flex-direction:row;flex-wrap:wrap;align-items:flex-start;gap:8px;max-width:none}
+  .r-top{flex-direction:column;flex-wrap:nowrap;gap:40px}
+  .r-title{margin-top:40px}   /* phone: selected filters sit side by side to save height */
+  .counter-n{font-size:80px}
+  .prof{grid-template-columns:1fr}
+  .prof>div+div{border-left:0;border-top:.5px solid var(--border)}
+  /* phone order: main panel, then similar leads, then back link + chosen filters */
+  .prof>div:nth-child(2){order:1;border-top:0;padding-top:32px;padding-bottom:64px}
+  .p-name{font-size:clamp(23px,calc(3.4vw - 3px),37px)}
+  .p-desc{font-size:15px}
+  .prof>div:nth-child(3){order:2;padding-bottom:34px}
+  .prof>div:nth-child(1){order:3;border-top:0;padding-bottom:80px}   /* 2.5x the usual 32px under the back link */
+  .prof>div:nth-child(3) .sim-i:last-child{border-bottom:0}
+  .row{grid-template-columns:1fr 36px;row-gap:6px}
+  .row .ds,.row .m{grid-column:1/2}
+  .row .bk{grid-row:1;grid-column:2}
+  .row .ds{margin-bottom:18px}   /* details -> metadata gap: 24px */
+  .row .nm{margin-bottom:3.5px}   /* space under the company name: 7px -> 10.5px (+50%) */
+  .row .nm{order:-3}.row .ds{order:-2}.row .m:nth-child(4){order:-1}   /* phone: name, details, HQ, then categories & tags */
+  .row .m:nth-child(4){margin-bottom:18px;opacity:1}   /* HQ line: location in full black; 24px above it and 24px below it */
+  .row .hql{display:inline;margin-right:24px;opacity:.8}   /* "HQ" label in the same muted mono style as the categories & tags line */   /* 12px between HQ and categories & tags */
+  .row:not(.hd){padding-bottom:54px}                 /* space under the last piece of metadata: 54px */
+  .row .m:empty{display:none}   /* phone: an empty Ethos / HQ leaves no gap */
+  .row.hd{display:none}
+}
+@media(max-width:720px){
+  .br-desk{display:none}
+  :root{--gutter:20px}
+  .head{grid-template-columns:auto 1fr;gap:12px}
+  .nav{display:none}
+  .strip{font-size:11px;letter-spacing:1.2px}
+  .logo{font-size:26px}
+  .cat-list{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+@media(min-width:721px){.br-ph{display:none}}
+/* phone: the strip is pinned to the very top of the screen (like sabi.london) so iPhone Safari tints its top bar to match; the page is pushed down by the strip's height */
+@media(max-width:1000px){
+  .strip{position:fixed;top:0;left:0;right:0;z-index:60}
+  body{padding-top:var(--stripH,36px)}
+}
+</style>
+</head>
+<body>
+
+<div class="strip"><span class="s1">A curated directory for consumer enterprise and luxury</span><span class="s2">Powered by <a href="https://www.sabi.london">sabi.london</a></span></div>
+
+<header class="head">
+  <a class="logo" href="#/" aria-label="+bureau">+bureau</a>
+  <div class="head-r">
+    <button class="go go-head" id="goBtn" type="button"><span>See results</span><svg class="mag" viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="10.4" cy="5.6" r="4.2"/><path d="M7.3 8.7 1.5 14.5"/></svg></button>
+  </div>
+</header>
+
+<main>
+  <!-- SEARCH -->
+  <section class="view" id="v-search" aria-label="Search">
+    <div class="search">
+      <aside class="rail"><div class="rail-in">
+        <div class="counter">
+          <div class="counter-n" id="counterN">0</div>
+          <div class="counter-l" id="counterL">search results</div>
+        </div>
+        <p class="hint mono" id="hint"></p>
+        <div class="chosen" id="chosen" aria-live="polite"></div>
+        <button type="button" class="reset" id="resetBtn" hidden>Clear all filters</button>
+        <p class="intro" id="intro">Discover your next connection. Filter the directory by selecting up to three categories, then refine your results further by choosing up to five tags.</p>
+      </div></aside>
+      <div class="fields">
+        <div>
+          <div class="sec-h"><h2>Categories</h2><span id="catMeta"></span></div>
+          <div class="cat-list" id="catList"></div>
+        </div>
+        <div>
+          <div class="sec-h"><h2>Tags</h2><span id="tagMeta"></span></div>
+          <div class="tag-list" id="tagList"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULTS -->
+  <section class="view" id="v-results" aria-label="Results"><div class="wide" id="resultsBox"></div></section>
+
+  <!-- PROFILE -->
+  <section class="view" id="v-profile" aria-label="Company profile"><div class="prof" id="profBox"></div></section>
+
+  <!-- SAVED -->
+  <section class="view" id="v-saved" aria-label="Saved"><div class="wide" id="savedBox"></div></section>
+</main>
+
+<footer class="foot">
+  <div>
+    <p>+bureau is a directory curated by SABI<br class="br-ph"> for the world of consumer enterprise and luxury.<br>Selected by hand, not exhaustive.</p>
+    <p class="c">© 2026 SABI LDN</p>
+  </div>
+</footer>
+
+<script>
+/* ════════════════════════════════════════════════════════════
+   CONFIG — the open decisions from the brief live here so they are
+   easy to change while testing against real data.
+   ════════════════════════════════════════════════════════════ */
+var CONFIG = {
+  MIN_CATEGORIES: 1,   // a search needs at least this many categories
+  MAX_CATEGORIES: 3,
+  MAX_TAGS: 5,         // at most this many tags can be selected (for now)
+   // ...and allows at most this many
+  CAT_LOGIC: 'OR',     // selected categories: a company needs ANY of them
+  TAG_LOGIC: 'OR',     // selected tags (on top of the category match): 'OR' = company needs ANY selected tag, 'AND' = ALL
+  DIM_TAGS: true,      // dim (still clickable) tags that no company in the selected categories has
+  PAGE_SIZE: 10,
+  MAX_BOOKMARKS: 50
+};
+
+var CATS = ['Public Relations & Communications', 'Media', 'Creative Content & Production', 'Events', 'Space', 'Networking & Community', 'Human Resources & Education', 'Consulting & Mentoring', 'Consumer & Market Insights', 'Sales & Merchandising', 'Curation & Sourcing', 'Finance', 'Legal', 'Environment & Sustainability'];
+var TAGS = ['Art & Design', 'Fashion', 'Beauty & Cosmetics', 'Health & Wellness', 'Sports', 'Food & Beverage', 'Hospitality', 'Travel', 'Automotive', 'Technology', 'AI', 'Virtual Reality (VR) & Augmented Reality (AR)', 'Website', 'E-commerce', 'Retail', 'Wholesale', 'Showroom', 'Sample sales', 'Trade show', 'Resale', 'Vintage & Antiques', 'Shipping & fulfilment', 'Storage', 'Exhibition space', 'Advertising', 'Brand partnerships', 'Social Media', 'Influencer marketing', 'Affiliate marketing', 'Email marketing', 'Newsletter', 'Editorial', 'Translation', 'Books & Publishing', 'Press & News', 'Media training', 'Content production', 'Music', 'Photography & Videography', 'Studio space', 'Creative direction', 'Casting', 'Model management', 'Talent management', 'Entertainment', 'Trend forecasting', 'Research', 'Consulting', 'Mentoring', 'Business accelerator', 'Grants & Awards', 'Venture Capital', 'Private Equity', 'Investor', 'Real estate', 'Accounting', 'Tax', 'Licensing', 'Intellectual property', 'Quality, Safety & Compliance', 'Certification', 'Employee Training', 'Job board', 'Appointments', 'Recruitment', 'Office resources', 'Coworking space', 'Meeting space', "Members' club", 'Private transport'];
+
+/* ════════════════════════════════════════════════════════════
+   DATA — the test dataset, loaded exactly as exported from the sheet.
+   Columns: Category | Company | Details | Tags | Similar | Ethos | Model | HQ (City) | Country
+   (any stray "Category / Company…" header row is skipped)
+   In production this is served from a rate-limited server API, never shipped as a client-side file.
+   ════════════════════════════════════════════════════════════ */
+var RAW = [
+  ["Finance, Consulting & Mentoring", "Bridge Mentorship by True Beauty Ventures", "A collaboration between Beauty Independent and True Beauty Ventures, is a 6-month accelerator program designed to help emerging beauty and wellness brands in North America become \"funding ready\". It provides structured mentorship, coaching, and access to a network of industry experts, service providers, and investors", "Mentoring, Consulting, Venture Capital, Private Equity, Business accelerator", "Glossier for Good, True Beauty Ventures, Diet Paratha Family Tree Mentoring, Beauty Independent", "", "", "", "","https://www.truebeautyventures.com/mentorship"],
+  ["Public Relations & Communications", "Forster Jones & Associates", "Strategic global communications and policy advice for individuals or companies", "Consulting, Talent management", "Marquis", "Black owned", "", "", "","https://forsterjones.com/"],
+  ["Spaces, Events", "Lighthouse Club", "Private members' club for recovery and wellness targeted to creative professionals.", "Members' club, Hospitality", "Mills Fabrica, Uncommon", "", "", "", "","https://lighthouseclub.co.uk/"],
+  ["Consulting & Mentoring, Human Resources & Education, Networking & Community", "Diet Paratha Family Tree Mentoring", "Diet Paratha’s Family Tree mentoring programme creates impactful opportunities by providing pathways to develop creative careers. Alongside distributing grants to talent, ensuring they have the resources to create art and build sustainable careers.", "Mentoring", "Black Seed VC, Black Ambition, Glossier for Good, Fifteen Percent Pledge", "Asian owned", "", "", "","https://dietparatha.com/mentoring"],
+  ["Consulting & Mentoring, Finance", "Black Ambition", "An organisation working to support entrepreneurs from underrepresented and minority backgrounds to succeed at raising startup capital needed for their businesses. Working to close America’s wealth and opportunity gaps through an annual prize competition and training initiatives for entrepreneurs at historically Black colleges and universities (HBCUs).", "Grants & Awards", "Black Seed VC, Fifteen Percent Pledge, Glossier for Good, Diet Paratha Family Tree Mentoring, Arrive", "Black owned", "", "", "","https://blackambitionprize.com/"],
+  ["Finance, Consulting & Mentoring", "Fifteen Percent Pledge", "A non-profit advocacy organisation aiming to close the racial wealth gap. It calls for retailers to pledge 15% of their purchasing power to Black-owned businesses and has since partnered with several major organisations to increase Black business representation and wealth generation. They offer grants to underrepresented creators and entrepreneurs and provide an expansive database of Black-owned businesses.", "Grants & Awards", "Black Ambition, Black Seed VC, Glossier for Good, Diet Paratha Family Tree Mentoring, The Angel Group", "Black owned", "", "", "","https://15percentpledge.org/"],
+  ["Finance, Consulting & Mentoring", "Glossier for Good", "Glossier for Good invests in entrepreneurs and nonprofits expanding the definition of beauty with their products, programs, and initiatives.", "Investor, Mentoring, Grants & Awards", "Fifteen Percent Pledge, Black Ambition, Black Seed VC, Diet Paratha Family Tree Mentoring, The Angel Group", "", "", "", "","https://uk.glossier.com/pages/glossier-for-good?srsltid=AfmBOorvdhnlYNgJ0Iw7P2uJnHAb4YJE3AIOiRJreyCCFf5CA4s_u9B9"],
+  ["Consumer & Market Insights", "Vogue Business Beauty Index", "An annual report on the world's top 30 beauty brands, published by Vogeu Business. Includes insider interviews, valuable case studies, and actionable insights.", "Beauty & Cosmetics, E-commerce, Research", "", "", "", "", "","https://www.voguebusiness.com/tag/vogue-business-beauty-index"],
+  ["Consumer & Market Insights, Sales & Merchandising", "The Lyst Index", "The Lyst Index is a global fashion intelligence resource and shopping destination providing quarterly insights reports and rankings of the biggest names in fashion, sales, engagement and more.", "Research, Retail, E-commerce, Fashion & Accessories", "", "", "", "", "","https://www.lyst.co.uk/the-lyst-index/the-lyst-index-q1-25/?paid_session_id=af3c0621-ae3e-4119-b41d-dfb1cef8f7a9"],
+  ["Consumer & Market Insights, Sales & Merchandising", "Windowswear", "A database for insights supporting visual designers working on physical retail and e-commerce environments for brands. Content includes visual merchandising, window displays, retail & interior design, product packaging, e-commerce, technology and more from the hottest global brands.", "Research, Fashion & Accessories, Retail, E-commerce, Grants & Awards, Art & Design", "Retail Dive, Similarweb, Deselle Partners, Paragone, Salt", "", "", "", "","https://www.windowswear.com/"],
+  ["Finance", "Stripes", "Global growth investors in consumer products and brands. Past and current portfolio includes Erewhon, A24, Khaite, Pleo, Kosas, Flex, and Remitly", "Investor, Venture Capital, Private Equity, Fashion & Accessories, Technology, Beauty & Cosmetics, Health & Wellness", "Imaginary Ventures, Beach House Group, Iris Ventures", "", "", "", "","https://www.stripes.co/"],
+  ["Sales & Merchandising", "Rainbow Wave", "Independent wholesale agency offering an integrated solution to sales and communications. Supporting clients with tailored strategic advice.", "Consulting, Wholesale", "Arddun Agency, Claret Showroom", "", "", "", "","https://rainbowwave.com/"],
+  ["Sales & Merchandising", "Arddun Agency", "London-based international wholesale and consulting agency, specialising in womenswear and lifestyle brands.", "Wholesale, Retail, Fashion & Accessories, Consulting", "Rainbow Wave, Claret Showroom", "", "", "", "","https://arddunagency.com/"],
+  ["Sales & Merchandising", "The Nold", "An innovative resale and sample sale platform aiming to help brands retake ownership of the lifecycle of their products. It is an online marketplace for authentic samples, archival collections, pre-loved items and overstock items that is brand-led rather than community based; in other words, the items are sourced directly from brands themselves.", "Fashion & Accessories, Sample sales, Retail", "The Music Room, Arlettie", "", "", "", "","https://thenold.com/?srsltid=AfmBOopvOG3ZGNwrQg3ak-gJV2C8XM554zlpxNqcysavaeKyx4-XEaiB"],
+  ["Sales & Merchandising", "Arlettie", "Exclusive luxury sample sales for luxury and fashion brands in Paris, London and Milan.", "Fashion & Accessories, Sample sales, Retail", "The Music Room, The Nold", "", "", "", "","https://www.arlettie.com/en/"],
+  ["Sales & Merchandising, Spaces", "The Music Room", "Sample sale space for the latest designer brands, sample sales, fashion shows, press days, art & culture events.", "Fashion & Accessories, Sample sales, Retail", "Arlettie, The Nold, Showcase", "", "", "", "","https://www.themusicroom.co.uk/work-with-us"],
+  ["Sales & Merchandising", "Showcase", "Host and organizer of luxury sample sales in London, New York, Sydney, and other locations. Partnering with global fashion houses, brands, and designers to offer exclusive discounts on items like clothing, skincare, and homeware. These sales are members-only and operate on a timed-slot basis to manage the shopping experience", "Showroom, Fashion & Accessories, Sample sales", "Arlettie, The Music Room, The Nold", "", "", "", "","https://www.showcase.co/"],
+  ["Sales & Merchandising", "Claret Showroom", "Wholesale agency covering Europe, The Middle East & The USA.", "Showroom, Fashion & Accessories, Wholesale", "Arddun Agency, Rainbow Wave, Showcase", "", "", "", "","https://www.claretshowroom.com/"],
+  ["Consumer & Market Insights, Curation & Sourcing", "Maddox Art Investment Guide", "Maddox Galleries art investment advisory segment.", "Hospitality, Investor, Consulting, Art & Design", "Malata, Dreweatts 1759, 1st Dibs, Rajan Bijlani, Artnet, Artsy", "", "", "", "","https://maddoxgallery.com/art-investment-advisory/"],
+  ["Consumer & Market Insights, Media", "TechCrunch", "Tech news and analysis with a focus on founders and startup teams", "Technology, Research, Press & News", "Wellfound:Weekly, Afro Tech, Wired, Morning Brew", "", "", "", "","https://techcrunch.com/"],
+  ["Consumer & Market Insights, Media", "Digiday", "A news platform for the media, marketing, and technology industry.", "Technology, Advertising, Press & News", "Morning Brew, TechCrunch, Wellfound:Weekly, Afro Tech, Wired", "", "", "", "","https://digiday.com/"],
+  ["Consumer & Market Insights, Media", "Wired", "A digital and monthly print magazine that focuses on how emerging technologies affect culture, the economy, and politics. It's known for its in-depth coverage of science, technology, culture, and business, and its striking photography and design. Published by Condé Nast.", "Technology, Research, Health & Wellness, Press & News", "TechCrunch, Wellfound:Weekly, Morning Brew, Afro Tech, Puck News", "", "", "", "","https://www.wired.com/"],
+  ["Creative Content & Production", "VMV studio", "Colourama + lifestyle photography/videography space availabe for hire in West London", "Content production, Studio space, Photography & Videography", "", "", "", "", "","https://www.vmv.studio/"],
+  ["Creative Content & Production", "Studio/Space by VMV", "Colourama + lifestyle photography/videography space availabe for hire in West London", "Content production, Photography & Videography", "Makerversity, Bloqs", "", "", "London", "United Kingdom","https://www.vmv.studio/space"],
+  ["Finance", "Slow Ventures", "A generalist early stage venture capital firm based in San Francisco, Boston, and New York,", "Private Equity, Venture Capital, Investor", "Iris Ventures", "", "", "San Francisco", "United States","https://slow.co/"],
+  ["Public Relations & Communications", "RKM", "PR and Communications agency for the Beauty, Aesthetics and Wellness sectors.", "Consulting, Beauty & Cosmetics, Health & Wellness, Influencer marketing, Social Media", "1996 PR, Shamoon Marketing Communications, Monty, SEEN Group, Brandstand Communications", "", "", "London", "United Kingdom","https://rkmcom.com/pr-and-communications-agency/"],
+  ["Public Relations & Communications", "Shamoon Marketing Communications", "A full-service communications agency specializing in beauty, health, medical aesthetics and lifestyle.", "Health & Wellness, Beauty & Cosmetics, Editorial, Consulting, Press & News", "1996 PR, RKM, SEEN Group, The Editor's List, Black Skin Directory", "", "", "New York", "United States","https://www.shamoonmc.com/"],
+  ["Media", "Tilted Axis Press", "An independent publisher of contemporary literature by the Global Majority, translated into or written in a variety of Englishes.", "Translation, Books & Publishing", "Diet Paratha, Weglot Translate", "", "", "", "","https://www.tiltedaxispress.com/"],
+  ["Curation & Sourcing", "Beowulf Capital", "A private investment firm that uses its own balance sheet and partner capital to invest in a concentrated portfolio of private companies, with a special interest in systems and information management", "Technology, Research, E-commerce", "", "", "", "", "","https://beowulfcap.com/"],
+  ["Curation & Sourcing", "Artnet", "An online platform for the international art market, offering services like art market analysis, auction results, and online art sales", "Hospitality, Art & Design", "Beowulf Capital, Artsy, Maddox Art Investment Guide", "", "", "", "","https://www.artnet.com/"],
+  ["Curation & Sourcing", "Artsy", "Artsy is the world's largest online art marketplace.", "Hospitality, Art & Design, Investor", "Dreweatts 1759, Beowulf Capital", "", "", "", "","https://www.artsy.net/"],
+  ["Media", "Allure", "A leading women's fashion magazine focused on beauty, published monthly by Condé Nast", "Fashion & Accessories, Beauty & Cosmetics, Affiliate marketing, Press & News", "Cosmetics Business, Beauty Independent, Goop, Violet Grey", "", "", "", "","https://www.allure.com/"],
+  ["Human Resources & Education", "Wellfound Jobs", "Job board", "Technology, Health & Wellness, Job board, Research", "Welcome To The Jungle", "", "", "", "","https://wellfound.com/jobs"],
+  ["Consumer & Market Insights, Human Resources & Education, Media", "Wellfound:Weekly", "News", "Technology, Health & Wellness, News, Research", "TechCrunch, Wired, Afro Tech, Morning Brew, Retail Dive, Little Black Book", "", "", "", "","https://wellfound.com/discover/blog/newsletters"],
+  ["Media, Consumer & Market Insights", "Puck News", "An American digital media company founded in 2021. Puck's coverage aims to cover the 'four centers of power' in the United States: Silicon Valley, Hollywood, Washington, D.C. and Wall Street", "Research, Newsletter, Fashion & Accessories, Press & News", "The Stanza, Business of Fashion, Dogma, Morning Brew, Wired, Feed Me", "", "", "", "","https://puck.news/?_gl=1%2A1fls2aw%2A_up%2AMQ..%2A_ga%2AMTYyNDM1MjkxNi4xNzQzMTY5MjMy%2A_ga_SEFD191RFM%2AMTc0MzE2OTIzMS4xLjAuMTc0MzE2OTIzMS4wLjAuMTU2NTUxMzIzNQ.."],
+  ["Media, Consumer & Market Insights", "The Stanza", "A newsletter about the business of hospitality, style, fashion, and the consumer experience from an investor's perspective. By Nadine Cho.", "Health & Wellness, Hospitality, Travel, Food & Beverage, Newsletter, Press & News", "Puck News, The Sybarite, Family Style, Eaten Magazine, Grub Street (New York Magazine)", "", "", "", "","https://www.thestanzamedia.com/"]
+];
+
+/* The sample uses a few labels that differ from the taxonomy in the brief.
+   They are mapped here so those companies stay reachable; edit or empty this to see the raw behaviour. */
+var ALIAS_CAT = {'Spaces':'Space'};
+var ALIAS_TAG = {'News':'Press & News','Fashion & Accessories':'Fashion'};   /* old spellings still in the sheet or sample data map to the current tag name */
+
+function list(s,alias){
+  var out=[], keep=CATS.concat(TAGS).filter(function(l){return l.indexOf(',')>-1});   /* labels that contain a comma, e.g. "Quality, Safety & Compliance" */
+  s=(s||'');
+  keep.forEach(function(l,i){ s=s.split(l).join('\u0001'+i+'\u0001'); });
+  s.split(',').forEach(function(x){
+    x=x.replace(/\u0001(\d+)\u0001/g,function(m,i){return keep[+i]});
+    x=x.trim(); if(!x)return;
+    x=(alias&&alias[x])||x;
+    if(out.indexOf(x)<0)out.push(x);
+  });
+  return out;
+}
+function buildDB(raw){
+  return raw.map(function(r,i){
+    var f=r[10]||r[2]||'';   /* "Details formatted" column (with *italics*) if present, else plain Details */
+    return {id:i,name:r[1],cats:list(r[0],ALIAS_CAT),desc:f.replace(/\*([^*\n]+?)\*/g,'$1'),dh:esc(f).replace(/\*([^*\n]+?)\*/g,'<em>$1</em>'),tags:list(r[3],ALIAS_TAG),similar:list(r[4]),ethos:list(r[5]),model:r[6],city:r[7],country:r[8],site:r[9]||''};
+  });
+}
+var DB = buildDB(RAW);   /* built-in sample data; replaced by the live sheet below when it loads */
+
+/* ═══ Live data: published Google Sheet (CSV) ═══
+   Edit the sheet and the site follows within a few minutes. Columns are matched by HEADING, so their order doesn't matter.
+   If the sheet can't be reached, the built-in data above is used instead. */
+var SHEET_URL='https://docs.google.com/spreadsheets/d/e/2PACX-1vQG4r_MCwDPlvqoweYlKuewQ4O4tO9q7_hfoN6I0J9H8WWpRMs0wXNcgsmwxNwBFoFb4i2_UUowVg-Z/pub?gid=0&single=true&output=csv';
+var SHEET_COLS={   /* our field -> accepted headings (case / spacing / punctuation ignored) */
+  cat:['category','categories'], name:['company','companyname','name','lead'], desc:['details','detail','description'], descf:['detailsformatted','detailsitalics','detailsformatting'],
+  tags:['tags','tag'], similar:['similar','similarleads','similarcompanies'], ethos:['ofnote','ethos','distinctions'],
+  model:['model','businessmodel'], city:['city','hqcity','location'], country:['country','hqcountry'],
+  site:['website','url','link','site'], live:['live','published','publish','show']
+};
+function parseCSV(t){
+  var rows=[],row=[],f='',q=false,i=0,ch;
+  t=t.replace(/^\uFEFF/,'');
+  for(;i<t.length;i++){
+    ch=t[i];
+    if(q){ if(ch==='"'){ if(t[i+1]==='"'){f+='"';i++} else q=false } else f+=ch }
+    else if(ch==='"') q=true;
+    else if(ch===','){ row.push(f); f='' }
+    else if(ch==='\n'||ch==='\r'){ if(ch==='\r'&&t[i+1]==='\n')i++; row.push(f); f=''; rows.push(row); row=[] }
+    else f+=ch;
+  }
+  if(f!==''||row.length){ row.push(f); rows.push(row) }
+  return rows;
+}
+function sheetToRaw(rows){
+  if(rows.length<2) return null;
+  var norm=function(h){return String(h).toLowerCase().replace(/[^a-z0-9]/g,'')}, hd=rows[0].map(norm), ix={};
+  Object.keys(SHEET_COLS).forEach(function(k){ ix[k]=-1; SHEET_COLS[k].some(function(a){var j=hd.indexOf(a); if(j>-1){ix[k]=j;return true}}) });
+  if(ix.name<0||ix.cat<0) return null;   /* not the directory tab: keep built-in data */
+  var get=function(r,k){return ix[k]<0?'':String(r[ix[k]]==null?'':r[ix[k]]).trim()};
+  var out=[];
+  rows.slice(1).forEach(function(r){
+    if(!get(r,'name')) return;
+    if(ix.live>-1 && !/^(true|yes|y|1|x|✓|✔)$/i.test(get(r,'live'))) return;   /* only ticked rows go on the site */
+    out.push([get(r,'cat'),get(r,'name'),get(r,'desc'),get(r,'tags'),get(r,'similar'),get(r,'ethos'),get(r,'model'),get(r,'city'),get(r,'country'),get(r,'site'),get(r,'descf')]);
+  });
+  return out;
+}
+function loadSheet(done){
+  var finished=false, end=function(){ if(!finished){finished=true;done()} };
+  setTimeout(end,5000);   /* never keep the visitor waiting more than 5s */
+  try{
+    fetch(SHEET_URL,{cache:'no-store'}).then(function(r){ if(!r.ok) throw new Error(r.status); return r.text() })
+    .then(function(t){ var raw=sheetToRaw(parseCSV(t)); if(raw&&raw.length){ RAW=raw; DB=buildDB(raw) } })
+    .catch(function(e){ console.warn('Sheet not loaded, using built-in data',e) })
+    .then(end);
+  }catch(e){ end() }
+}
+
+/* ═══ State ═══ */
+var selCats={}, selTags={}, shown=CONFIG.PAGE_SIZE, lastResults=[];
+function keys(o){return Object.keys(o)}
+function $(id){return document.getElementById(id)}
+function esc(s){return String(s).replace(/[&<>"]/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]})}
+
+/* ═══ Search logic (single place — swap as decisions are made) ═══ */
+function matches(c,cats,tags){
+  /* (company has ANY selected category) AND (company has the selected tag(s)); no category = no results */
+  if(!cats.length) return false;
+  var okC = CONFIG.CAT_LOGIC==='OR'
+    ? cats.some(function(x){return c.cats.indexOf(x)>-1})
+    : cats.every(function(x){return c.cats.indexOf(x)>-1});
+  if(!okC) return false;
+  if(!tags.length) return true;
+  return CONFIG.TAG_LOGIC==='OR'
+    ? tags.some(function(x){return c.tags.indexOf(x)>-1})
+    : tags.every(function(x){return c.tags.indexOf(x)>-1});
+}
+function run(cats,tags){return DB.filter(function(c){return matches(c,cats,tags)})}
+function count(cats,tags){return run(cats,tags).length}
+
+/* ═══ Saved (per device / browser; no saved searches by design) ═══ */
+function getSaved(){try{return JSON.parse(localStorage.getItem('bureau.saved')||'[]')}catch(e){return window.__saved||[]}}
+function setSaved(a){window.__saved=a;try{localStorage.setItem('bureau.saved',JSON.stringify(a))}catch(e){}}
+function isSaved(id){return getSaved().indexOf(id)>-1}
+function toggleSaved(id){
+  var a=getSaved(), i=a.indexOf(id);
+  if(i>-1)a.splice(i,1); else { if(a.length>=CONFIG.MAX_BOOKMARKS){alert('Saved limit reached ('+CONFIG.MAX_BOOKMARKS+').');return} a.push(id) }
+  setSaved(a);
+}
+
+/* ═══ Search view ═══ */
+function renderSearch(){
+  var cats=keys(selCats), tags=keys(selTags);
+  $('resetBtn').hidden=!(cats.length||tags.length);
+  var total=(cats.length+tags.length)? count(cats,tags) : 0;
+  $('counterN').textContent=total;
+  $('counterL').textContent=total===1?'search result':'search results';
+
+  /* Categories: once the maximum is chosen, the rest are locked (unclickable).
+     Tags: greyed out and locked until a category is chosen; after that, dimmed (still clickable) only if no company in the chosen categories has that tag. Any number of tags can be selected. */
+  var atMax=cats.length>=CONFIG.MAX_CATEGORIES, atMaxT=tags.length>=CONFIG.MAX_TAGS;
+  $('catList').innerHTML=CATS.map(function(c){return optBtn(c,'cat','pill',false,atMax&&!selCats[c])}).join('');
+  $('tagList').innerHTML=TAGS.map(function(t){
+    if(!cats.length) return optBtn(t,'tag','pill',true,!selTags[t]);          /* no category: all tags greyed; unselected ones locked */
+    var dim=CONFIG.DIM_TAGS&&count(cats,[t])===0;                            /* greyed if no company in the chosen categories has it (selected tags too; they stay removable) */
+    return optBtn(t,'tag','pill',dim,dim||(atMaxT&&!selTags[t]))}).join('');
+  $('catMeta').textContent=cats.length+' / '+CONFIG.MAX_CATEGORIES+' selected';
+  $('tagMeta').textContent=tags.length+' / '+CONFIG.MAX_TAGS+' selected';
+
+  var chips=cats.map(function(c){return chip(c,'cat')}).concat(tags.map(function(t){return chip(t,'tag')})).join('');
+  $('chosen').innerHTML=chips;
+
+  var n=cats.length+tags.length;
+  $('goBtn').hidden = false;                      /* always visible in the header on the search page; enabled once a category is chosen */
+  $('goBtn').disabled = cats.length<CONFIG.MIN_CATEGORIES || total===0;
+  $('intro').hidden = n>0;                         /* instruction text goes away once the user starts selecting */
+  $('hint').classList.toggle('dim',n===0);   /* "No selections made." is the faded grey it was before */
+  $('hint').textContent = n===0 ? 'No selections made.' : total===0 ? 'No results yet. Select more filters to find a match.' : '';   /* same slot under the counter for both messages */
+}
+function optBtn(label,type,cls,dim,locked){
+  var sel=(type==='cat'?selCats:selTags)[label];
+  return '<button type="button" class="'+cls+(dim?' off':'')+'" data-type="'+type+'" data-v="'+esc(label)+'" aria-pressed="'+(!!sel)+'"'+(locked?' disabled':'')+'><span>'+esc(label)+'</span></button>';
+}
+function chip(v,type){return '<button type="button" class="chip" data-type="'+type+'" data-v="'+esc(v)+'" aria-label="Remove '+esc(v)+'">'+esc(v)+'<svg class="x" viewBox="0 0 10 10" width="11" height="11" aria-hidden="true"><path d="M1 1 9 9M9 1 1 9" fill="none" stroke="currentColor" stroke-width="1.3"/></svg></button>'}
+/* When categories change, drop any selected tag that no company in the remaining categories has,
+   so a greyed-out tag always looks (and is) unselected. */
+function pruneTags(){
+  var cats=keys(selCats);
+  keys(selTags).forEach(function(t){ if(!cats.length||count(cats,[t])===0) delete selTags[t]; });
+}
+function toggle(type,v){
+  if(type==='tag'&&!selTags[v]&&(!keys(selCats).length||count(keys(selCats),[v])===0))return;   /* greyed-out tags can never be selected */
+  var o=type==='cat'?selCats:selTags;
+  if(o[v])delete o[v]; else { if(type==='cat'&&keys(selCats).length>=CONFIG.MAX_CATEGORIES)return; if(type==='tag'&&keys(selTags).length>=CONFIG.MAX_TAGS)return; o[v]=1; }
+  if(type==='cat') pruneTags();
+  renderSearch();
+}
+document.addEventListener('click',function(e){
+  var b=e.target.closest('[data-type]'); if(!b||b.disabled)return;
+  if(b.closest('#v-search')) toggle(b.dataset.type,b.dataset.v);
+  else if(b.closest('#resultsBox')&&b.classList.contains('chip')) { toggle(b.dataset.type,b.dataset.v); if(keys(selCats).length>=CONFIG.MIN_CATEGORIES){ shown=CONFIG.PAGE_SIZE; renderResults(); } else location.hash='#/'; }
+});
+$('goBtn').addEventListener('click',function(){ if(!$('goBtn').disabled){shown=CONFIG.PAGE_SIZE;location.hash='#/results'} });
+
+/* ═══ Results view ═══ */
+var resultsObserver=null;
+/* the searched-for categories and tags this company matched: categories first, then tags */
+function filtersOf(c){
+  return c.cats.filter(function(x){return selCats[x]}).concat(c.tags.filter(function(x){return selTags[x]})).join(', ');
+}
+function rowHtml(c){
+  return '<a class="row" href="#/c/'+c.id+'"><span class="nm">'+esc(c.name)+'</span><span class="ds">'+c.dh+'</span><span class="m">'+esc(filtersOf(c))+'</span><span class="m">'+(hqRaw(c)?'<span class="hql">HQ</span><span class="hqv">'+esc(hqRaw(c))+'</span>':'')+'</span><span class="bk" aria-hidden="true">'+(isSaved(c.id)?'●':'→')+'</span></a>';
+}
+function renderResults(){
+  if(resultsObserver){resultsObserver.disconnect();resultsObserver=null}
+  var cats=keys(selCats), tags=keys(selTags);
+  lastResults=run(cats,tags);
+  var chips=cats.map(function(c){return chip(c,'cat')}).concat(tags.map(function(t){return chip(t,'tag')})).join('');
+  shown=Math.min(Math.max(shown,CONFIG.PAGE_SIZE),Math.max(lastResults.length,CONFIG.PAGE_SIZE));
+  var rows=lastResults.slice(0,shown).map(rowHtml).join('');
+  $('resultsBox').innerHTML=
+    '<div class="r-top"><div><a class="back" href="#/">← Refine search</a><h1 class="r-title">'+lastResults.length+' '+(lastResults.length===1?'result':'results')+'</h1></div><div class="chosen">'+chips+'</div></div>'+
+    (lastResults.length?'<div class="rows"><div class="row hd"><span>Company</span><span>Details</span><span>Categories &amp; tags</span><span>HQ</span><span></span></div><div id="rowsBody">'+rows+'</div></div><div id="sentinel"></div>':'<p class="empty">No matches</p>');
+  watchSentinel();
+}
+/* Continuous scroll: when the end of the list nears the screen, the next batch is added */
+function watchSentinel(){
+  var sen=$('sentinel'); if(!sen) return;
+  if(!('IntersectionObserver' in window)){ $('rowsBody').insertAdjacentHTML('beforeend',lastResults.slice(shown).map(rowHtml).join('')); shown=lastResults.length; return; }
+  resultsObserver=new IntersectionObserver(function(es){
+    if(!es[0].isIntersecting) return;
+    if(shown>=lastResults.length){resultsObserver.disconnect();return}
+    var from=shown; shown=Math.min(shown+CONFIG.PAGE_SIZE,lastResults.length);
+    $('rowsBody').insertAdjacentHTML('beforeend',lastResults.slice(from,shown).map(rowHtml).join(''));
+    if(shown>=lastResults.length){resultsObserver.disconnect();return}
+    resultsObserver.unobserve(sen); resultsObserver.observe(sen);   /* re-check straight away in case it is still in view */
+  },{rootMargin:'600px 0px'});
+  resultsObserver.observe(sen);
+}
+function pad(n){return (n<10?'0':'')+n}
+function hqRaw(c){return [c.city,c.country].filter(Boolean).join(', ')}
+function ethosRaw(c){return c.ethos.join(' · ')}
+function hq(c){return hqRaw(c)||'—'}          /* profile page keeps the dash */
+function ethosTxt(c){return ethosRaw(c)||'—'}
+
+/* ═══ Profile view ═══ */
+function similar(c){
+  /* Order: 1) the curated "Similar" column, 2) companies that list this one as similar,
+     3) automatic fallback (shared categories weigh most, then shared tags, then description words).
+     The brief leaves the final mechanism open (curated / automated / hybrid). */
+  var out=[], seen={}; seen[c.id]=1;
+  var low=function(x){return x.toLowerCase()};
+  var byName={}; DB.forEach(function(o){byName[low(o.name)]=o});
+  c.similar.forEach(function(n){var o=byName[low(n)]; if(o&&!seen[o.id]){seen[o.id]=1;out.push({o:o,why:'Curated lead'})}});
+  DB.forEach(function(o){ if(!seen[o.id]&&o.similar.some(function(n){return low(n)===low(c.name)})){seen[o.id]=1;out.push({o:o,why:'Curated lead'})} });
+  var tokens=c.desc.toLowerCase().split(/\W+/).filter(function(w){return w.length>5});
+  DB.filter(function(o){return !seen[o.id]}).map(function(o){
+    var sc=o.cats.filter(function(x){return c.cats.indexOf(x)>-1}), st=o.tags.filter(function(x){return c.tags.indexOf(x)>-1});
+    var dw=tokens.filter(function(w){return o.desc.toLowerCase().indexOf(w)>-1}).length;
+    var why='Shares: '+sc.concat(st).join(', ');
+    return {o:o,why:why,score:sc.length*3+st.length*2+dw*.5};
+  }).filter(function(x){return x.score>=3}).sort(function(a,b){return b.score-a.score}).forEach(function(x){out.push(x)});
+  return out.slice(0,5);
+}
+function niceUrl(u){
+  /* display form: www.domain.com/path (link target is untouched). www. is only added to bare domains, never to subdomains like blog.x.com */
+  var t=u.replace(/^https?:\/\//,'').replace(/[?#].*$/,'').replace(/\/$/,''), host=t.split('/')[0], parts=host.split('.');
+  var n=/^(co|com|org|net|ac|gov)\.[a-z]{2}$/i.test(parts.slice(-2).join('.'))?3:2;
+  return (parts[0].toLowerCase()!=='www'&&parts.length<=n-0&&parts.length===n)?'www.'+t:t;
+}
+function renderProfile(id){
+  var c=DB[id]; if(!c){location.hash='#/';return}
+  var sim=similar(c);
+  var simHtml=sim.map(function(x,i){
+    return '<a class="sim-i" href="#/c/'+x.o.id+'"><span><b>'+esc(x.o.name)+'</b><p>'+esc(x.why)+'</p></span></a>';
+  }).join('');
+  var hasSearch=keys(selCats).length>=CONFIG.MIN_CATEGORIES;   /* no saved search (e.g. lead opened in a new tab) -> plain "Back to search" */
+  var back='<a class="back" href="'+(hasSearch?'#/results':'#/')+'">← Back to search'+(hasSearch?' results':'')+'</a>';
+  var pick=function(all,sel){return all.filter(function(x){return sel[x]})};
+  var dash=function(a){return a.length?esc(a.join(', ')):'—'};
+  var selC=pick(c.cats,selCats), selT=pick(c.tags,selTags);
+  var site=c.site?'<a href="'+esc(c.site)+'" target="_blank" rel="noopener" style="text-transform:none;letter-spacing:.4px">'+esc(niceUrl(c.site))+'</a>':'';
+  var rows=[['Website',site],['HQ',hqRaw(c)],['Categories',selC.join(', ')],['Tags',selT.join(', ')],['Of note',c.ethos.join(', ')],['Model',c.model||'']].filter(function(x){return String(x[1]).trim()}).map(function(x){return '<dt>'+x[0]+'</dt><dd>'+(x[0]==='Website'?x[1]:esc(x[1]))+'</dd>'});
+  $('profBox').innerHTML=
+    '<div'+(hasSearch?'':' class="no-search"')+'>'+back+(keys(selCats).length?'<div class="chosen p-chips">'+keys(selCats).concat(keys(selTags)).map(function(v){return '<span class="chip">'+esc(v)+'</span>'}).join('')+'</div>':'')+'</div>'+
+    '<div>'+back.replace('class="back"','class="back back-top"')+'<h1 class="p-name" style="margin-top:0">'+esc(c.name)+'</h1>'+
+      '<p class="p-desc">'+c.dh+'</p>'+
+      (rows.length?'<div class="imprint"><dl style="grid-template-columns:105px 1fr;margin-top:44px">'+rows.join('')+'</dl></div>':'')+
+      '</div>'+
+    '<div><span class="sec-title">Similar leads</span><div class="sim">'+(simHtml||'<p class="mono" style="font-size:12px">No credible matches yet.</p>')+'</div></div>';
+}
+
+/* ═══ Saved view ═══ */
+function renderSaved(){
+  var a=getSaved().map(function(i){return DB[i]}).filter(Boolean);
+  $('savedBox').innerHTML='<div><a class="back" href="#/">← Search</a><h1 class="r-title">Saved ('+a.length+'/'+CONFIG.MAX_BOOKMARKS+')</h1></div>'+
+    (a.length?'<div class="rows">'+a.map(function(c){return rowHtml(c)}).join('')+'</div>':'<p class="empty">Nothing saved on this device yet</p>')+
+    '<p class="mono" style="font-size:11px;letter-spacing:.8px;opacity:.6">Saved companies live on this device only.</p>';
+}
+
+/* ═══ Router ═══ */
+/* A search lasts 20 minutes from the last activity, then it is cleared and the visitor is returned to a fresh search page */
+var SEARCH_TTL=20*60*1000, lastActive=Date.now();
+function hasSel(){return keys(selCats).length>0||keys(selTags).length>0}
+function saveSel(){try{sessionStorage.setItem('bureauSel',JSON.stringify({c:selCats,t:selTags,ts:lastActive}))}catch(e){}}
+function loadSel(){try{var v=JSON.parse(sessionStorage.getItem('bureauSel')||'null'); if(v){ if(v.ts&&Date.now()-v.ts>SEARCH_TTL){sessionStorage.removeItem('bureauSel')} else {selCats=v.c||{};selTags=v.t||{};lastActive=v.ts||Date.now()} }}catch(e){}}
+function checkExpiry(){
+  if(hasSel()&&Date.now()-lastActive>SEARCH_TTL){
+    selCats={};selTags={};saveSel();renderSearch();
+    if(location.hash==='#/results'||location.hash==='#/saved') location.hash='#/';
+  }
+}
+function touch(){checkExpiry(); lastActive=Date.now(); if(hasSel()) saveSel()}
+function route(){
+  saveSel();
+  var h=location.hash||'#/', m;
+  document.querySelectorAll('.view').forEach(function(v){v.classList.remove('on')});
+  var view='search';
+  if(h==='#/results'){ if(keys(selCats).length<CONFIG.MIN_CATEGORIES){location.hash='#/';return} view='results'; renderResults(); }
+  else if(m=h.match(/^#\/c\/(\d+)$/)){ view='profile'; renderProfile(+m[1]); }
+  else if(h==='#/saved'){ view='saved'; renderSaved(); }
+  else renderSearch();
+  if(view!=='search') $('goBtn').hidden=true;
+  document.body.classList.toggle('is-search',view==='search');
+  $('v-'+view).classList.add('on');
+  window.scrollTo(0,0);
+}
+/* the search page shows the footer at the end of its own scrolling pane */
+(function(){var f=document.querySelector('footer.foot');document.querySelector('.fields').appendChild(f.cloneNode(true))})();
+window.addEventListener('hashchange',route);
+loadSel();
+['pointerdown','keydown','touchstart','wheel'].forEach(function(ev){document.addEventListener(ev,touch,{capture:true,passive:true})});
+var _scrollT=0; document.addEventListener('scroll',function(){var n=Date.now(); if(n-_scrollT>5000){_scrollT=n; touch()}},{capture:true,passive:true});
+setInterval(checkExpiry,30000);
+$('resetBtn').addEventListener('click',function(){selCats={};selTags={};saveSel();renderSearch()});
+/* browser top bar: dark while the strip is in view, paper once it has scrolled away */
+(function(){var st=document.querySelector('.strip');function h(){document.documentElement.style.setProperty('--stripH',st.offsetHeight+'px')}h();addEventListener('resize',h);if(document.fonts&&document.fonts.ready)document.fonts.ready.then(h)})();
+(function(){var m=document.getElementById('themeColor');function u(){m.setAttribute('content',(window.scrollY<36)?'#170006':'#FAFBE3')}addEventListener('scroll',u,{passive:true});addEventListener('hashchange',u);u()})();
+loadSheet(route);
+</script>
+  <!-- ═══════════ Custom cursor: asterisk (experimental) ═══════════
+       Mouse / trackpad only (phones and tablets are untouched).
+       • Default: a solid ink asterisk (six club-shaped petals) exactly on the pointer, no lag.
+       • Over links and buttons: the asterisk turns 30° (vertical arm becomes horizontal, like a typewriter
+         keystroke) and grows slightly. Add data-cursor="active" to anything else that should react.
+       • Anything with data-cursor-note="…" also shows the text as a small typewriter footnote beside the pointer.
+         Opt-in per element; nothing uses it yet.
+       • Inverts whatever is underneath it, pixel by pixel (mix-blend-mode: difference): dark on paper, light on the
+         dark ticker / lightbox, split along the edge when it straddles both, and flipped over text.
+         Text fields keep the native cursor. -->
+  <style>
+    .sabi-cursor, .sabi-note {
+      position: fixed;
+      left: 0;
+      top: 0;
+      pointer-events: none;
+      z-index: 2147483000;
+      color: var(--text, #211D1D);
+    }
+    html.sabi-on-dark .sabi-note { color: var(--bg, #FAFBE3); }
+
+    /* The asterisk inverts whatever is under each part of it (mix-blend-mode: difference).
+       Paper-coloured source: over paper it comes out black, over the dark ticker / lightbox
+       it comes out light, and a star straddling both is split half and half. Dark text
+       under it flips to light, light text to dark. Must sit on .sabi-cursor itself (the
+       element with the stacking context), not on the svg inside it. */
+    html .sabi-cursor,
+    html.sabi-on-dark .sabi-cursor {
+      color: var(--bg, #FAFBE3);
+      mix-blend-mode: difference;
+    }
+
+    .sabi-cursor { width: 0; height: 0; opacity: 0; will-change: transform; }
+    .sabi-cursor.is-visible { opacity: 1; }
+    .sabi-cursor svg {
+      position: absolute;
+      left: -7.5px;              /* 15px mark, centre exactly on the pointer */
+      top: -7.5px;
+      width: 15px;               /* change these three numbers together to resize the star */
+      height: 15px;
+      overflow: visible;
+      transition: transform 0.15s cubic-bezier(.2,.7,.2,1);
+    }
+    .sabi-cursor svg * {
+      fill: currentColor;        /* solid, club-petal asterisk */
+      stroke: none;
+    }
+    .sabi-cursor.is-active svg               { transform: rotate(30deg) scale(1.25); }
+    .sabi-cursor.is-down svg                 { transform: scale(0.85); }
+    .sabi-cursor.is-active.is-down svg       { transform: rotate(30deg) scale(1.05); }
+
+    /* Footnote-style note (typewriter mono, paper background so it reads over anything) */
+    .sabi-note {
+      font-family: 'gemeli-mono', ui-monospace, Menlo, Consolas, monospace;
+      font-size: 11px;
+      line-height: 1.3;
+      letter-spacing: 0.02em;
+      max-width: 220px;
+      padding: 5px 8px;
+      background: var(--bg, #FAFBE3);
+      opacity: 0;
+      transition: opacity 0.12s ease;
+      will-change: transform;
+    }
+    html.sabi-on-dark .sabi-note { background: #170006; }
+    .sabi-note.is-visible { opacity: 1; }
+
+    /* Hide the native cursor only once the custom one is actually running */
+    html.sabi-cursor-on, html.sabi-cursor-on * { cursor: none !important; }
+    /* Over text fields: native cursor (I-beam) comes back, ours steps aside */
+    html.sabi-cursor-on.sabi-native, html.sabi-cursor-on.sabi-native * { cursor: auto !important; }
+    html.sabi-cursor-on.sabi-native .sabi-cursor,
+    html.sabi-cursor-on.sabi-native .sabi-note { opacity: 0; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .sabi-cursor svg, .sabi-note { transition: none; }
+    }
+  </style>
+  <script>
+    (function () {
+      // Only for devices with a real, hover-capable pointer.
+      var mq = window.matchMedia('(hover: hover) and (pointer: fine)');
+      if (!mq.matches) return;
+
+      var root = document.documentElement;
+      var cursor = document.createElement('div');
+      cursor.className = 'sabi-cursor';
+      cursor.setAttribute('aria-hidden', 'true');
+      // Six club-shaped petals (narrow at the centre, swelling to a rounded tip),
+      // one drawn pointing up and rotated in 60° steps, plus a small hexagonal hub.
+      var PETAL = 'M-19 0C-19-100-43-150-43-225C-43-285-28-309 0-309C28-309 43-285 43-225C43-150 19-100 19 0Z';
+      var petals = '';
+      for (var i = 0; i < 6; i++) {
+        petals += '<path transform="rotate(' + (i * 60) + ')" d="' + PETAL + '"/>';
+      }
+      cursor.innerHTML =
+        '<svg viewBox="-330 -330 660 660" xmlns="http://www.w3.org/2000/svg">' +
+          petals +
+          '<polygon points="0,-62 54,-31 54,31 0,62 -54,31 -54,-31"/>' +
+        '</svg>';
+
+      var note = document.createElement('div');
+      note.className = 'sabi-note';
+      note.setAttribute('aria-hidden', 'true');
+
+      document.body.appendChild(note);
+      document.body.appendChild(cursor);
+
+      var ACTIVE_SEL = 'a, button, [role="button"], summary, label, [data-cursor="active"]';
+      var NATIVE_SEL = 'input, textarea, select, [contenteditable=""], [contenteditable="true"]';
+      var DARK_SEL   = '.ticker, .lightbox-overlay, .strip';
+
+      var x = -100, y = -100, queued = false;
+      var noteTarget = null, noteW = 0, noteH = 0;
+
+      function showNote(t) {
+        noteTarget = t;
+        note.textContent = t.getAttribute('data-cursor-note');
+        note.classList.add('is-visible');
+        noteW = note.offsetWidth; noteH = note.offsetHeight;
+        queue();
+      }
+      function hideNote() {
+        noteTarget = null;
+        note.classList.remove('is-visible');
+      }
+
+      function paint() {
+        queued = false;
+        cursor.style.transform = 'translate3d(' + x + 'px,' + y + 'px,0)';
+        if (noteTarget) {
+          var nx = x + 16, ny = y + 14;
+          if (nx + noteW > window.innerWidth - 8)  nx = x - 16 - noteW;   // flip near the right edge
+          if (ny + noteH > window.innerHeight - 8) ny = y - 14 - noteH;   // flip near the bottom edge
+          note.style.transform = 'translate3d(' + nx + 'px,' + ny + 'px,0)';
+        }
+      }
+      function queue() { if (!queued) { queued = true; requestAnimationFrame(paint); } }
+
+      window.addEventListener('mousemove', function (e) {
+        x = e.clientX; y = e.clientY;
+        queue();
+        if (!root.classList.contains('sabi-cursor-on')) root.classList.add('sabi-cursor-on');
+        cursor.classList.add('is-visible');
+      }, { passive: true });
+
+      document.addEventListener('mouseover', function (e) {
+        var t = e.target;
+        if (!(t instanceof Element)) return;
+        root.classList.toggle('sabi-native', !!t.closest(NATIVE_SEL));
+        root.classList.toggle('sabi-on-dark', !!t.closest(DARK_SEL));
+
+        var n = t.closest('[data-cursor-note]');
+        if (n) showNote(n); else if (noteTarget) hideNote();
+
+        cursor.classList.toggle('is-active', !!t.closest(ACTIVE_SEL) || !!n);
+      });
+
+      document.addEventListener('mousedown', function () { cursor.classList.add('is-down'); });
+      window.addEventListener('mouseup',   function () { cursor.classList.remove('is-down'); });
+
+      // Pointer leaves the window
+      root.addEventListener('mouseleave', function () { cursor.classList.remove('is-visible'); hideNote(); });
+      root.addEventListener('mouseenter', function () { cursor.classList.add('is-visible'); });
+
+      // If the device stops being mouse-driven, switch everything off
+      if (mq.addEventListener) mq.addEventListener('change', function (e) {
+        if (!e.matches) {
+          root.classList.remove('sabi-cursor-on', 'sabi-native', 'sabi-on-dark');
+          cursor.remove(); note.remove();
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
