@@ -114,7 +114,7 @@ body.is-search main,body.is-search .view.on{min-height:0}
 .back.back-top{display:none}
 .r-title{font-weight:400;font-size:clamp(15px,calc(3vw - 6px),19px);letter-spacing:2px;text-transform:uppercase;line-height:1.1;margin-top:20px}
 .rows{border-top:.5px solid var(--border)}
-.row{display:grid;grid-template-columns:minmax(160px,1.1fr) 2.4fr minmax(180px,1.1fr) minmax(130px,.8fr) 44px;gap:var(--gutter);align-items:baseline;padding:18px 8px;border-bottom:.5px solid var(--border);text-decoration:none;width:100%;text-align:left}
+.row{display:grid;grid-template-columns:minmax(150px,1fr) 2.3fr minmax(240px,1.5fr) minmax(165px,.8fr) 44px;gap:var(--gutter);align-items:baseline;padding:18px 8px;border-bottom:.5px solid var(--border);text-decoration:none;width:100%;text-align:left}
 .row:hover{background:var(--tint);opacity:1}
 .row .m{font-family:var(--font-mono);font-weight:300;font-size:11.5px;letter-spacing:1px;text-transform:uppercase}
 .row .nm{font-weight:500;font-size:15px;letter-spacing:.2px}
@@ -164,7 +164,7 @@ body.is-search main,body.is-search .view.on{min-height:0}
 .foot nav a{font-weight:300;font-size:13px}
 
 @media(min-width:1001px){
-  .row .ds{margin-right:128px}   /* Details -> Ethos gap: 32px column gap + 128px = 160px */
+  .row .ds{margin-right:98px}   /* gap between Details and Categories & tags: 32px column gap + 98px = 130px */
   .row .bk{font-size:0;line-height:0;align-self:start;width:22px;height:16px;position:relative;justify-self:end}
   .row:not(.hd) .bk::after{content:'';position:absolute;right:0;top:0;width:22px;height:16px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 16'%3E%3Cpath d='M1 8.4H20.5M13.5 1.6 20.5 8.4 13.5 15.2' fill='none' stroke='black' stroke-width='1.25'/%3E%3C/svg%3E") no-repeat center/100% 100%;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 16'%3E%3Cpath d='M1 8.4H20.5M13.5 1.6 20.5 8.4 13.5 15.2' fill='none' stroke='black' stroke-width='1.25'/%3E%3C/svg%3E") no-repeat center/100% 100%}   /* bigger arrow without pushing the row text down */
 }
