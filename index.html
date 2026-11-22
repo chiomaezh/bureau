@@ -224,6 +224,7 @@ body.is-search main,body.is-search .view.on{min-height:0}
 #loader.on{display:flex}
 #loader.out{opacity:0}
 #loader svg{width:58px;height:58px;fill:var(--text);shape-rendering:geometricPrecision}   /* no will-change: the asterisk is redrawn as a vector every frame, so it stays crisp while turning */
+.row .ct{display:inline-block;max-width:100%}
 </style>
 </head>
 <body>
@@ -540,10 +541,15 @@ $('goBtn').addEventListener('click',function(){
 var resultsObserver=null;
 /* the searched-for categories and tags this company matched: categories first, then tags */
 function filtersOf(c){
-  return c.cats.filter(function(x){return selCats[x]}).concat(c.tags.filter(function(x){return selTags[x]})).join(', ');
+  return c.cats.filter(function(x){return selCats[x]}).concat(c.tags.filter(function(x){return selTags[x]}));
+}
+/* each category / tag stays on one line; the line only breaks between them (an item longer than the column still wraps inside itself) */
+function filtersHtml(c){
+  var a=filtersOf(c);
+  return a.map(function(v,i){return '<span class="ct">'+esc(v)+(i<a.length-1?',':'')+'</span>'}).join(' ');
 }
 function rowHtml(c){
-  return '<a class="row" href="#/c/'+c.id+'"><span class="nm">'+esc(c.name)+'</span><span class="ds">'+c.dh+'</span><span class="m">'+esc(filtersOf(c))+'</span><span class="m">'+(hqRaw(c)?'<span class="hql">HQ</span><span class="hqv">'+esc(hqRaw(c))+'</span>':'')+'</span><span class="bk" aria-hidden="true">'+(isSaved(c.id)?'●':'→')+'</span></a>';
+  return '<a class="row" href="#/c/'+c.id+'"><span class="nm">'+esc(c.name)+'</span><span class="ds">'+c.dh+'</span><span class="m">'+filtersHtml(c)+'</span><span class="m">'+(hqRaw(c)?'<span class="hql">HQ</span><span class="hqv">'+esc(hqRaw(c))+'</span>':'')+'</span><span class="bk" aria-hidden="true">'+(isSaved(c.id)?'●':'→')+'</span></a>';
 }
 function renderResults(){
   if(resultsObserver){resultsObserver.disconnect();resultsObserver=null}
