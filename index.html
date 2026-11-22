@@ -223,7 +223,7 @@ body.is-search main,body.is-search .view.on{min-height:0}
 #loader{display:none;position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--bg);align-items:center;justify-content:center;opacity:1;transition:opacity .3s ease}
 #loader.on{display:flex}
 #loader.out{opacity:0}
-#loader svg{width:72px;height:72px;fill:var(--text);shape-rendering:geometricPrecision}   /* no will-change: the asterisk is redrawn as a vector every frame, so it stays crisp while turning */
+#loader svg{width:58px;height:58px;fill:var(--text);shape-rendering:geometricPrecision}   /* no will-change: the asterisk is redrawn as a vector every frame, so it stays crisp while turning */
 </style>
 </head>
 <body>
@@ -516,7 +516,10 @@ var loading=false;
 function showLoader(done){
   var ov=$('loader'), svg=ov.querySelector('svg'), hd=document.querySelector('.head').getBoundingClientRect();
   var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches, DUR=reduce?400:1300, TURN=540, t0=performance.now();
-  ov.style.top=Math.round(hd.bottom)+'px'; ov.classList.remove('out'); ov.classList.add('on');
+  var top=Math.round(hd.bottom), h=innerHeight-top, w=document.documentElement.clientWidth;
+  /* keep the content box an even number of pixels so the asterisk is centred on a whole pixel (half-pixel positions look fuzzy) */
+  ov.style.top=top+'px'; ov.style.boxSizing='border-box'; ov.style.paddingBottom=(h%2)+'px'; ov.style.paddingRight=(w%2)+'px';
+  ov.classList.remove('out'); ov.classList.add('on');
   function finish(){
     done();
     setTimeout(function(){ ov.classList.add('out'); setTimeout(function(){ ov.classList.remove('on','out'); svg.style.transform='' },300) },60);
