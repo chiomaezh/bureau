@@ -220,12 +220,8 @@ body.is-search main,body.is-search .view.on{min-height:0}
   .strip{position:fixed;top:0;left:0;right:0;z-index:60}
   body{padding-top:var(--stripH,36px)}
 }
-/* PC: the counter / chosen-filters panel sits on the right, the categories and tags on the left */
-@media(min-width:1001px){
-  .search{grid-template-columns:1fr minmax(278px,25.4%)}
-  .fields{order:1}
-  .rail{order:2;border-right:0;border-left:.5px solid var(--border)}
-}
+/* header: the +bureau title sits on the right on every page, the See results button on the left */
+.head{flex-direction:row-reverse}
 </style>
 </head>
 <body>
