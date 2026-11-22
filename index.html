@@ -504,7 +504,7 @@ document.addEventListener('click',function(e){
   if(b.closest('#v-search')) toggle(b.dataset.type,b.dataset.v);
   else if(b.closest('#resultsBox')&&b.classList.contains('chip')) { toggle(b.dataset.type,b.dataset.v); if(keys(selCats).length>=CONFIG.MIN_CATEGORIES){ shown=CONFIG.PAGE_SIZE; renderResults(); } else location.hash='#/'; }
 });
-/* ═══ "See results" transition: the SABI asterisk spins (gently speeding up) for 1.3s under the header, then the results appear ═══ */
+/* ═══ "See results" transition: the SABI asterisk spins (gently speeding up) for 1.3s under the header, slowing to a stop, then fades out to the results ═══ */
 var loading=false;
 (function(){
   var PETAL='M-19 0C-19-100-43-150-43-225C-43-285-28-309 0-309C28-309 43-285 43-225C43-150 19-100 19 0Z', petals='';
@@ -515,7 +515,7 @@ var loading=false;
 })();
 function showLoader(done){
   var ov=$('loader'), svg=ov.querySelector('svg'), hd=document.querySelector('.head').getBoundingClientRect();
-  var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches, DUR=reduce?400:1300, TURN=620, t0=performance.now();
+  var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches, DUR=reduce?400:1300, TURN=540, t0=performance.now();
   ov.style.top=Math.round(hd.bottom)+'px'; ov.classList.remove('out'); ov.classList.add('on');
   function finish(){
     done();
@@ -523,7 +523,7 @@ function showLoader(done){
   }
   (function frame(now){
     var t=Math.min(1,((now||performance.now())-t0)/DUR);
-    if(!reduce) svg.style.transform='rotate('+(TURN*(t+0.35*t*t)/1.35)+'deg)';   /* starts steady, ends about 1.7x faster */
+    if(!reduce) svg.style.transform='rotate('+(TURN*(1-(1-t)*(1-t)))+'deg)';   /* starts fast, slows smoothly to a complete stop at the end, then the overlay fades out */
     if(t<1) requestAnimationFrame(frame); else finish();
   })(t0);
 }
