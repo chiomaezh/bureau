@@ -220,6 +220,10 @@ body.is-search main,body.is-search .view.on{min-height:0}
   .strip{position:fixed;top:0;left:0;right:0;z-index:60}
   body{padding-top:var(--stripH,36px)}
 }
+#loader{display:none;position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--bg);align-items:center;justify-content:center;opacity:1;transition:opacity .3s ease}
+#loader.on{display:flex}
+#loader.out{opacity:0}
+#loader svg{width:72px;height:72px;fill:var(--text);will-change:transform}
 </style>
 </head>
 <body>
@@ -500,7 +504,34 @@ document.addEventListener('click',function(e){
   if(b.closest('#v-search')) toggle(b.dataset.type,b.dataset.v);
   else if(b.closest('#resultsBox')&&b.classList.contains('chip')) { toggle(b.dataset.type,b.dataset.v); if(keys(selCats).length>=CONFIG.MIN_CATEGORIES){ shown=CONFIG.PAGE_SIZE; renderResults(); } else location.hash='#/'; }
 });
-$('goBtn').addEventListener('click',function(){ if(!$('goBtn').disabled){shown=CONFIG.PAGE_SIZE;location.hash='#/results'} });
+/* ═══ "See results" transition: the SABI asterisk spins (gently speeding up) for 1.3s under the header, then the results appear ═══ */
+var loading=false;
+(function(){
+  var PETAL='M-19 0C-19-100-43-150-43-225C-43-285-28-309 0-309C28-309 43-285 43-225C43-150 19-100 19 0Z', petals='';
+  for(var i=0;i<6;i++) petals+='<path transform="rotate('+(i*60)+')" d="'+PETAL+'"/>';
+  var ov=document.createElement('div'); ov.id='loader'; ov.setAttribute('aria-hidden','true');
+  ov.innerHTML='<svg viewBox="-330 -330 660 660" xmlns="http://www.w3.org/2000/svg">'+petals+'<polygon points="0,-62 54,-31 54,31 0,62 -54,31 -54,-31"/></svg>';
+  document.body.appendChild(ov);
+})();
+function showLoader(done){
+  var ov=$('loader'), svg=ov.querySelector('svg'), hd=document.querySelector('.head').getBoundingClientRect();
+  var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches, DUR=reduce?400:1300, TURN=620, t0=performance.now();
+  ov.style.top=Math.round(hd.bottom)+'px'; ov.classList.remove('out'); ov.classList.add('on');
+  function finish(){
+    done();
+    setTimeout(function(){ ov.classList.add('out'); setTimeout(function(){ ov.classList.remove('on','out'); svg.style.transform='' },300) },60);
+  }
+  (function frame(now){
+    var t=Math.min(1,((now||performance.now())-t0)/DUR);
+    if(!reduce) svg.style.transform='rotate('+(TURN*(t+0.35*t*t)/1.35)+'deg)';   /* starts steady, ends about 1.7x faster */
+    if(t<1) requestAnimationFrame(frame); else finish();
+  })(t0);
+}
+$('goBtn').addEventListener('click',function(){
+  if($('goBtn').disabled||loading) return;
+  loading=true;
+  showLoader(function(){ shown=CONFIG.PAGE_SIZE; location.hash='#/results'; loading=false });
+});
 
 /* ═══ Results view ═══ */
 var resultsObserver=null;
