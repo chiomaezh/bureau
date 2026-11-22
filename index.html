@@ -223,7 +223,7 @@ body.is-search main,body.is-search .view.on{min-height:0}
 #loader{display:none;position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--bg);align-items:center;justify-content:center;opacity:1;transition:opacity .3s ease}
 #loader.on{display:flex}
 #loader.out{opacity:0}
-#loader svg{width:72px;height:72px;fill:var(--text);will-change:transform}
+#loader svg{width:72px;height:72px;fill:var(--text);shape-rendering:geometricPrecision}   /* no will-change: the asterisk is redrawn as a vector every frame, so it stays crisp while turning */
 </style>
 </head>
 <body>
