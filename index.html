@@ -445,6 +445,26 @@ function matches(c,cats,tags){
 function run(cats,tags){return DB.filter(function(c){return matches(c,cats,tags)})}
 function count(cats,tags){return run(cats,tags).length}
 
+/* ═══ Result ordering ═══
+   1) most selected categories + tags matched first
+   2) within a tie: a shuffle that is fixed for one search (seed), so scrolling, the back button and
+      removing a chip never reorder the list, but a fresh search gives a fresh order.
+   (Future: focus / rarity tie-breakers, paid priority — add them between 1 and 2.) */
+var seed=Math.floor(Math.random()*4294967296);
+function newSeed(){seed=Math.floor(Math.random()*4294967296)}
+function shuffleKey(id){
+  var x=Math.imul(id+1,374761393)^Math.imul(seed|0,668265263);
+  x=Math.imul(x^(x>>>13),1274126177);
+  return (x^(x>>>16))>>>0;
+}
+function rank(list,cats,tags){
+  var sc={};
+  list.forEach(function(c){
+    sc[c.id]=cats.filter(function(x){return c.cats.indexOf(x)>-1}).length+tags.filter(function(x){return c.tags.indexOf(x)>-1}).length;
+  });
+  return list.slice().sort(function(a,b){return (sc[b.id]-sc[a.id])||(shuffleKey(a.id)-shuffleKey(b.id))});
+}
+
 /* ═══ Saved (per device / browser; no saved searches by design) ═══ */
 function getSaved(){try{return JSON.parse(localStorage.getItem('bureau.saved')||'[]')}catch(e){return window.__saved||[]}}
 function setSaved(a){window.__saved=a;try{localStorage.setItem('bureau.saved',JSON.stringify(a))}catch(e){}}
@@ -536,7 +556,7 @@ function showLoader(done){
 $('goBtn').addEventListener('click',function(){
   if($('goBtn').disabled||loading) return;
   loading=true;
-  showLoader(function(){ shown=CONFIG.PAGE_SIZE; location.hash='#/results'; loading=false });
+  showLoader(function(){ newSeed(); shown=CONFIG.PAGE_SIZE; location.hash='#/results'; loading=false });
 });
 
 /* ═══ Results view ═══ */
@@ -556,7 +576,7 @@ function rowHtml(c){
 function renderResults(){
   if(resultsObserver){resultsObserver.disconnect();resultsObserver=null}
   var cats=keys(selCats), tags=keys(selTags);
-  lastResults=run(cats,tags);
+  lastResults=rank(run(cats,tags),cats,tags);
   var chips=cats.map(function(c){return chip(c,'cat')}).concat(tags.map(function(t){return chip(t,'tag')})).join('');
   shown=Math.min(Math.max(shown,CONFIG.PAGE_SIZE),Math.max(lastResults.length,CONFIG.PAGE_SIZE));
   var rows=lastResults.slice(0,shown).map(rowHtml).join('');
@@ -644,8 +664,8 @@ function renderSaved(){
 /* A search lasts 20 minutes from the last activity, then it is cleared and the visitor is returned to a fresh search page */
 var SEARCH_TTL=20*60*1000, lastActive=Date.now();
 function hasSel(){return keys(selCats).length>0||keys(selTags).length>0}
-function saveSel(){try{sessionStorage.setItem('bureauSel',JSON.stringify({c:selCats,t:selTags,ts:lastActive}))}catch(e){}}
-function loadSel(){try{var v=JSON.parse(sessionStorage.getItem('bureauSel')||'null'); if(v){ if(v.ts&&Date.now()-v.ts>SEARCH_TTL){sessionStorage.removeItem('bureauSel')} else {selCats=v.c||{};selTags=v.t||{};lastActive=v.ts||Date.now()} }}catch(e){}}
+function saveSel(){try{sessionStorage.setItem('bureauSel',JSON.stringify({c:selCats,t:selTags,ts:lastActive,s:seed}))}catch(e){}}
+function loadSel(){try{var v=JSON.parse(sessionStorage.getItem('bureauSel')||'null'); if(v){ if(v.ts&&Date.now()-v.ts>SEARCH_TTL){sessionStorage.removeItem('bureauSel')} else {selCats=v.c||{};selTags=v.t||{};lastActive=v.ts||Date.now();if(typeof v.s==='number')seed=v.s} }}catch(e){}}
 function checkExpiry(){
   if(hasSel()&&Date.now()-lastActive>SEARCH_TTL){
     selCats={};selTags={};saveSel();renderSearch();
