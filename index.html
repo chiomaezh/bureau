@@ -144,9 +144,9 @@ body.is-search main,body.is-search .view.on{min-height:0}
 .p-chips{margin-top:34px}
 .reset{font-family:var(--font-mono);font-weight:300;font-size:11px;letter-spacing:1px;opacity:1;text-transform:lowercase;background:none;border:0;border-bottom:.5px solid var(--border);padding:0 0 2px;margin-top:0;color:inherit;cursor:pointer;align-self:flex-start}
 .reset[hidden]{display:none}
-@media(max-width:1000px){.p-chips{flex-direction:row;flex-wrap:wrap;gap:8px;margin-top:0;order:1}
+@media(max-width:1000px){.p-chips{flex-direction:row;flex-wrap:wrap;gap:8px;margin-top:0;order:2}
   .prof>div:nth-child(1){display:flex;flex-direction:column}
-  .prof>div:nth-child(1) .back{order:2;align-self:flex-start;margin-top:24px}
+  .prof>div:nth-child(1) .back{order:1;align-self:flex-start;margin:0 0 24px}   /* bottom link sits above the chosen filters */
   .back.back-top{display:inline-block;margin:0 0 64px}
   .prof>div.no-search{display:none}}   /* no saved search: the top link is enough, drop the bottom one */
 .p-site{font-family:var(--font-mono);font-weight:300;font-size:12px;letter-spacing:.8px;margin:0 0 28px}
@@ -180,12 +180,13 @@ body.is-search main,body.is-search .view.on{min-height:0}
   #chosen{margin-top:-7px}   /* chips sit at exactly the same height as on the results page */
   #chosen,.r-top .chosen{flex-direction:row;flex-wrap:wrap;align-items:flex-start;gap:8px;max-width:none}
   .r-top{flex-direction:column;flex-wrap:nowrap;gap:40px}
+  #resultsBox{padding-top:24px}   /* 25% less above 'refine search' */
   .r-title{margin-top:40px}   /* phone: selected filters sit side by side to save height */
   .counter-n{font-size:80px}
   .prof{grid-template-columns:1fr}
   .prof>div+div{border-left:0;border-top:.5px solid var(--border)}
   /* phone order: main panel, then similar leads, then back link + chosen filters */
-  .prof>div:nth-child(2){order:1;border-top:0;padding-top:32px;padding-bottom:64px}
+  .prof>div:nth-child(2){order:1;border-top:0;padding-top:24px;padding-bottom:64px}   /* 25% less above the top back link */
   .p-name{font-size:clamp(23px,calc(3.4vw - 3px),37px)}
   .p-desc{font-size:15px}
   .prof>div:nth-child(3){order:2;padding-bottom:34px}
