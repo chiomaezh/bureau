@@ -274,7 +274,7 @@ html.lb-open,html.lb-open body{overflow:hidden}
 .lightbox-overlay.lb-light .lb-star svg{fill:#000}
 .lb-star svg{width:100%;height:100%;fill:var(--lb-fg);transition:transform .7s cubic-bezier(.3,1.5,.4,1)}
 @keyframes lbSpin{to{transform:rotate(360deg)}}
-.lb-desc{position:absolute;right:0;top:50%;transform:translateY(-50%);width:30ch;min-height:8em;text-align:left;color:var(--lb-fg);font-style:italic;font-family:var(--font-body);font-weight:300;font-size:14px;line-height:1.5;opacity:0;transition:opacity .25s ease;pointer-events:none}
+.lb-desc{position:absolute;left:50%;top:50%;transform:translateY(-50%);width:30ch;min-height:8em;text-align:left;color:var(--lb-fg);font-style:italic;font-family:var(--font-body);font-weight:300;font-size:14px;line-height:1.5;opacity:0;transition:opacity .25s ease;pointer-events:none}
 .lb-desc.on{opacity:1}
 .lb-nav{align-self:start;display:flex;justify-content:center;padding-top:20px}
 .lb-login{writing-mode:vertical-rl;white-space:nowrap;font-family:var(--font-mono);font-weight:300;font-size:13px;letter-spacing:1.6px;text-transform:uppercase;padding:0}
@@ -372,7 +372,8 @@ html.lb-open,html.lb-open body{overflow:hidden}
         <li><button type="button" class="lb-item" id="lbCal" aria-disabled="true" data-desc="A calendar of the industry’s events, launches and key dates."><span class="lb-name">Calendar</span><span class="lb-meta">Coming soon</span></button><p class="lb-d">A calendar of the industry’s events, launches and key dates.</p></li>
       </ul>
     </div>
-    <div class="lb-stage"><div class="lb-star" id="lbStar" aria-hidden="true"></div><p class="lb-desc" id="lbDesc" aria-live="polite"></p></div>
+    <div class="lb-stage"><div class="lb-star" id="lbStar" aria-hidden="true"></div></div>
+    <p class="lb-desc" id="lbDesc" aria-live="polite"></p>
     <div class="lb-clockbox"><span class="lb-clock" id="lbClock"></span><button type="button" class="lb-mode" id="lbMode">Light mode</button></div>
     <nav class="lb-nav" aria-label="Account"><button type="button" class="lb-login" id="lbLogin"><span>Log in</span></button></nav>
   </div>
@@ -809,6 +810,11 @@ var starTurn=0;
 function starSnap(){ var s=$('lbStar').firstChild; if(!s)return; starTurn+=30; s.style.transform='rotate('+starTurn+'deg)'; }
 /* the asterisk drifts gently and is nudged away when the cursor comes near */
 var floatRaf=0, mouse=null, fp={x:0,y:0,vx:0,vy:0,wx:0,wy:0,wt:0,last:0,init:false};
+function edgeOut(o,ax,ay){   /* unit direction and distance to the nearest side of a box that contains the point */
+  var c=[[ -1,0,ax-o.l ],[ 1,0,o.r-ax ],[ 0,-1,ay-o.t ],[ 0,1,o.b-ay ]], m=c[0];
+  for(var i=1;i<4;i++) if(c[i][2]<m[2]) m=c[i];
+  return m;
+}
 function floatStep(t){
   var el=$('lbStar'), st=document.querySelector('.lb-stage'), sr=st.getBoundingClientRect(), sz=el.offsetWidth, rad=sz/2;
   var wide=innerWidth>1000;   /* PC: the whole page. Phone: just the star's own band, so it never floats over the text */
@@ -839,7 +845,7 @@ function floatStep(t){
   /* steer round the obstacles */
   obs.forEach(function(o){
     var ax=sx+fp.x, ay=sy+fp.y, qx=Math.max(o.l,Math.min(o.r,ax)), qy=Math.max(o.t,Math.min(o.b,ay));
-    var ex=ax-qx, ey=ay-qy, ed=Math.sqrt(ex*ex+ey*ey); if(ed===0){ ex=ax-(o.l+o.r)/2; ey=ay-(o.t+o.b)/2; ed=Math.sqrt(ex*ex+ey*ey)||1 }
+    var ex=ax-qx, ey=ay-qy, ed=Math.sqrt(ex*ex+ey*ey); if(ed===0){ var nr=edgeOut(o,ax,ay); ex=nr[0]; ey=nr[1]; ed=1 }
     var reach=rad+o.p+60; if(ed<reach){ var kk=(1-ed/reach)*70; dvx+=ex/ed*kk; dvy+=ey/ed*kk }
   });
   var e=Math.min(1,dt*2.5); fp.vx+=(dvx-fp.vx)*e; fp.vy+=(dvy-fp.vy)*e;
@@ -850,8 +856,11 @@ function floatStep(t){
   obs.forEach(function(o){
     var ax=sx+fp.x, ay=sy+fp.y, qx=Math.max(o.l,Math.min(o.r,ax)), qy=Math.max(o.t,Math.min(o.b,ay));
     var gx=ax-qx, gy=ay-qy, gd=Math.sqrt(gx*gx+gy*gy), need=rad+o.p;
-    if(gd<need){ if(gd===0){ gx=ax-(o.l+o.r)/2; gy=ay-(o.t+o.b)/2; gd=Math.sqrt(gx*gx+gy*gy)||1 }
-      fp.x+=gx/gd*(need-gd); fp.y+=gy/gd*(need-gd); var inn=fp.vx*gx/gd+fp.vy*gy/gd; if(inn<0){fp.vx-=inn*gx/gd; fp.vy-=inn*gy/gd} way() }
+    if(gd===0){   /* centre is inside the box: slide out through the nearest side */
+      var nr=edgeOut(o,ax,ay); fp.x+=nr[0]*(nr[2]+need); fp.y+=nr[1]*(nr[2]+need); fp.vx=0; fp.vy=0; way();
+    } else if(gd<need){
+      fp.x+=gx/gd*(need-gd); fp.y+=gy/gd*(need-gd); var inn=fp.vx*gx/gd+fp.vy*gy/gd; if(inn<0){fp.vx-=inn*gx/gd; fp.vy-=inn*gy/gd} way()
+    }
   });
   el.style.translate=fp.x.toFixed(1)+'px '+fp.y.toFixed(1)+'px';
   floatRaf=requestAnimationFrame(floatStep);
