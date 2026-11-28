@@ -26,7 +26,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 
 /* strip */
 .strip{height:calc(36px + env(safe-area-inset-top,0px));padding-top:env(safe-area-inset-top,0px);box-shadow:0 -100vh 0 var(--dark);position:relative;z-index:1;background:var(--dark);color:var(--bg);display:grid;place-items:center;text-align:center;padding:0 var(--gutter);font-family:var(--font-mono);font-weight:300;font-size:12.5px;letter-spacing:1.6px;text-transform:uppercase}
-.strip span{grid-area:1/1;opacity:0}
+.strip .s1,.strip .s2{grid-area:1/1;opacity:0}
 /* 16s loop: tagline ~8s, fades out, then "powered by" fades in for ~8s, and round again */
 .strip .s1{animation:stripA 16s ease-in-out infinite}
 .strip .s2{animation:stripB 16s ease-in-out infinite}
@@ -227,11 +227,91 @@ body.is-search main,body.is-search .view.on{min-height:0}
 #loader.out{opacity:0}
 #loader svg{width:58px;height:58px;fill:var(--text);shape-rendering:geometricPrecision}   /* no will-change: the asterisk is redrawn as a vector every frame, so it stays crisp while turning */
 .row .ct{display:inline-block;max-width:100%}
+
+/* ═══ Strip menu button + homepage lightbox ═══ */
+.menu-btn{font-family:var(--font-mono);font-weight:300;font-size:inherit;letter-spacing:inherit;text-transform:uppercase;color:var(--bg);height:22px;padding:0;display:inline-flex;align-items:center;gap:8px;line-height:1;white-space:nowrap}
+.menu-btn span{line-height:1.35;background:linear-gradient(currentColor,currentColor) 0 100%/0 1px no-repeat;transition:background-size .35s ease}
+.menu-btn:hover span{background-size:100% 1px}
+/* the + and × are drawn as two hairlines so they sit exactly on the vertical centre of the word, whatever the font does */
+.menu-btn i,.lb-close i{font-size:0;width:9px;height:9px;position:relative;display:inline-block;flex:none}
+.menu-btn i::before,.menu-btn i::after,.lb-close i::before,.lb-close i::after{content:'';position:absolute;left:0;right:0;top:50%;height:1px;margin-top:-.5px;background:currentColor}
+.menu-btn i::after{transform:rotate(90deg)}
+.lb-close i::before{transform:rotate(45deg)}.lb-close i::after{transform:rotate(-45deg)}
+.menu-btn i,.lb-close i{top:-1px}
+.menu-btn:hover{opacity:1}
+@media(min-width:1001px){.strip .s2{margin-left:auto;margin-right:28px}}
+@media(max-width:1000px){.menu-btn{position:absolute;right:var(--gutter);top:50%;transform:translateY(-50%)}}
+@media(max-width:1000px){.strip{height:auto;min-height:calc(36px + env(safe-area-inset-top,0px));padding:6px 100px 6px var(--gutter);justify-items:start;text-align:left;line-height:1.4}}
+
+.lightbox-overlay{position:fixed;inset:0;z-index:100;--lb-bg:var(--dark);--lb-fg:var(--bg);--lb-line:rgba(250,251,227,.35);background:var(--lb-bg);color:var(--lb-fg);font-family:var(--font-mono);font-weight:300;display:flex;flex-direction:column;overflow:hidden;visibility:hidden;clip-path:inset(0 0 100% 0);transition:clip-path .5s cubic-bezier(.7,0,.2,1),visibility 0s .5s}
+.lightbox-overlay.on{visibility:visible;clip-path:inset(0 0 0 0);transition:clip-path .5s cubic-bezier(.7,0,.2,1),visibility 0s}
+html.lb-open,html.lb-open body{overflow:hidden}
+.lightbox-overlay.lb-light{--lb-bg:var(--bg);--lb-fg:var(--text);--lb-line:rgba(33,29,29,.35)}
+.lightbox-overlay:focus{outline:0}
+.lightbox-overlay a,.lightbox-overlay button{color:var(--lb-fg)}
+.lb-top{flex:none;height:calc(36px + env(safe-area-inset-top,0px));padding:env(safe-area-inset-top,0px) var(--gutter) 0;display:flex;align-items:center;justify-content:space-between;font-size:12.5px;letter-spacing:1.6px;text-transform:uppercase}
+.lb-top a{text-decoration:underline;text-underline-offset:3px}
+.lb-top .lb-pw{margin-left:auto;margin-right:42px}
+.lb-close{font-family:var(--font-mono);font-weight:300;font-size:inherit;letter-spacing:inherit;text-transform:uppercase;height:22px;padding:0;display:inline-flex;align-items:center;gap:8px;line-height:1;white-space:nowrap}
+.lb-close span{line-height:1.35;background:linear-gradient(currentColor,currentColor) 0 100%/0 1px no-repeat;transition:background-size .35s ease}
+.lb-close:hover{opacity:1}
+.lb-close:hover span{background-size:100% 1px}
+.lb-body{flex:1;min-height:0;display:grid;grid-template-columns:minmax(278px,25.4%) 1fr 56px;gap:var(--gutter);padding:0 var(--gutter);border-top:.5px solid var(--lb-line);opacity:0;transition:opacity .35s ease .2s}
+.lightbox-overlay.on .lb-body,.lightbox-overlay.on .lb-foot{opacity:1}
+.lb-left{overflow-y:auto;padding:20px 0 28px;scrollbar-width:none;display:flex;flex-direction:column}
+.lb-left::-webkit-scrollbar{display:none}
+.lb-logo{font-family:var(--font-logo);font-weight:400;font-size:30px;line-height:1;text-transform:lowercase;margin:0;letter-spacing:0;text-decoration:none}   /* same size and place as the +bureau on the directory header */
+.lb-menu{list-style:none;display:flex;flex-direction:column;gap:10px;margin-top:auto}
+.lb-item{display:flex;justify-content:flex-start;align-items:baseline;gap:14px;text-align:left;padding:4px 0;font-family:var(--font-body);font-weight:300;font-size:11px;line-height:1.4;letter-spacing:1.4px;text-transform:uppercase}
+.lb-name{transition:transform .35s cubic-bezier(.3,1.4,.4,1)}
+.lb-item:hover .lb-name,.lb-item:focus-visible .lb-name{transform:translateX(8px)}
+.lb-meta{opacity:.55}
+.lb-item[aria-disabled=true]{cursor:default}
+.lb-item[aria-disabled=true] .lb-name{opacity:.55}
+.lightbox-overlay .lb-item:hover{opacity:1}
+.lb-d{display:none}
+.lb-stage{position:relative;display:grid;place-items:center;min-width:0}
+.lb-star{width:min(18.2vh,35%);aspect-ratio:1;display:grid;place-items:center;animation:lbSpin 60s linear infinite}
+.lb-star svg{width:100%;height:100%;fill:var(--lb-fg);transition:transform .7s cubic-bezier(.3,1.5,.4,1)}
+@keyframes lbSpin{to{transform:rotate(360deg)}}
+.lb-desc{position:absolute;right:0;top:50%;transform:translateY(-50%);max-width:30ch;text-align:left;color:#fff;mix-blend-mode:difference;font-style:italic;font-family:var(--font-body);font-weight:300;font-size:16px;line-height:1.5;opacity:0;transition:opacity .25s ease;pointer-events:none}
+.lb-desc.on{opacity:1}
+.lb-nav{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding:32px 0 28px;font-size:13px;letter-spacing:1.6px;text-transform:uppercase}
+.lb-nav>*{writing-mode:vertical-rl;white-space:nowrap}
+.lb-nav a{text-decoration:none;font-family:var(--font-mono);font-weight:300;font-size:inherit;letter-spacing:inherit;text-transform:inherit}
+.lb-nav a:hover{text-decoration:underline;text-underline-offset:4px}
+.lb-foot{flex:none;display:flex;justify-content:space-between;align-items:flex-end;gap:2rem;flex-wrap:wrap;padding:22px var(--gutter) 26px;border-top:.5px solid var(--lb-line);opacity:0;transition:opacity .35s ease .2s}
+.lb-foot p{font-family:var(--font-body);font-weight:400;font-size:15px;line-height:1.5}
+.lb-foot .c{font-family:var(--font-mono);font-weight:300;font-size:13px;letter-spacing:.5px;margin-top:.6rem}
+.lb-foot-r{display:flex;flex-direction:column;align-items:flex-end;gap:12px;font-size:11px;letter-spacing:1.2px;text-transform:uppercase}
+.lb-clock{font-family:var(--font-body);font-size:13px;opacity:.85}
+.lb-mode{font-family:var(--font-mono);font-weight:300;font-size:inherit;letter-spacing:inherit;text-transform:uppercase;text-decoration:underline;text-underline-offset:3px}
+@media(prefers-reduced-motion:reduce){.lb-star{animation:none}.lightbox-overlay,.lightbox-overlay.on{transition:none}}
+@media(max-width:1000px){
+  .lightbox-overlay{overflow-y:auto}
+  .lb-top{position:sticky;top:0;background:var(--lb-bg);z-index:2;font-size:11px;letter-spacing:1.2px}
+  .lb-top .lb-pw,.lb-top .lb-tag{display:none}
+  .lb-close{margin-left:auto}
+  .lb-body{display:flex;flex-direction:column;gap:0;padding:0 var(--gutter) 8px;overflow:visible;flex:none;border-top:0}
+  .lb-left{display:contents}
+  .lb-logo{order:1;font-size:26px;margin:13px 0 40px}
+  .lb-menu{order:2}
+  .lb-menu{gap:22px}
+  .lb-item{font-size:12px;padding:6px 0 8px}
+  .lb-d{display:block;font-style:italic;font-family:var(--font-body);font-weight:300;font-size:14px;line-height:1.55;max-width:38ch;opacity:.85}
+  .lb-stage{order:3;padding:44px 0 36px;display:flex;flex-direction:column;align-items:center}
+  .lb-star{width:min(19.5vw,80px)}
+  .lb-desc{display:none}
+  .lb-nav{order:4;align-items:flex-start;justify-content:flex-start;padding:0 0 28px;font-size:11px;letter-spacing:1.2px}
+  .lb-nav>*{writing-mode:horizontal-tb}
+  .lb-foot{flex-direction:column;align-items:flex-start;gap:20px}
+  .lb-foot-r{align-items:flex-start;flex-direction:row;gap:22px}
+}
 </style>
 </head>
 <body>
 
-<div class="strip"><span class="s1">A curated directory for consumer enterprise and luxury</span><span class="s2">Powered by <a href="https://www.sabi.london">sabi.london</a></span></div>
+<div class="strip"><span class="s1">A curated directory<span class="ph-x"> for consumer enterprise and luxury</span></span><span class="s2">Powered by <a href="https://www.sabi.london">sabi.london</a></span><button type="button" class="menu-btn" id="menuBtn" aria-haspopup="dialog" aria-controls="home"><span>Menu</span><i aria-hidden="true">+</i></button></div>
 
 <header class="head">
   <a class="logo" href="#/" aria-label="+bureau">+bureau</a>
@@ -277,6 +357,34 @@ body.is-search main,body.is-search .view.on{min-height:0}
   <section class="view" id="v-saved" aria-label="Saved"><div class="wide" id="savedBox"></div></section>
 </main>
 
+<!-- ═══ Homepage lightbox (route #/): the +bureau front door. Opens over whichever page the visitor was on; × returns there ═══ -->
+<div class="lightbox-overlay" id="home" tabindex="-1" role="dialog" aria-modal="true" aria-label="+bureau home" aria-hidden="true">
+  <div class="lb-top">
+    <span class="lb-tag">A resource for consumer enterprise and luxury</span>
+    <span class="lb-pw">Powered by <a href="https://www.sabi.london">sabi.london</a></span>
+    <button type="button" class="lb-close" id="homeClose"><span>Close</span><i aria-hidden="true">×</i></button>
+  </div>
+  <div class="lb-body">
+    <div class="lb-left">
+      <div class="lb-logo">+bureau</div>
+      <ul class="lb-menu" id="lbMenu">
+        <li><button type="button" class="lb-item" id="lbDir" data-desc="Find companies, services and resources across consumer enterprise and luxury. Choose up to three categories, then narrow your results with tags."><span class="lb-name">Directory</span></button><p class="lb-d">Find companies, services and resources across consumer enterprise and luxury. Choose up to three categories, then narrow your results with tags.</p></li>
+        <li><button type="button" class="lb-item" id="lbCal" aria-disabled="true" data-desc="A calendar of the industry’s events, launches and key dates. Coming soon."><span class="lb-name">Calendar</span><span class="lb-meta">Soon</span></button><p class="lb-d">A calendar of the industry’s events, launches and key dates. Coming soon.</p></li>
+      </ul>
+    </div>
+    <div class="lb-stage"><div class="lb-star" id="lbStar" aria-hidden="true"></div><p class="lb-desc" id="lbDesc" aria-live="polite"></p></div>
+    <nav class="lb-nav" aria-label="SABI"><a href="https://www.sabi.london" target="_blank" rel="noopener">sabi.london ↗</a></nav>
+  </div>
+  <div class="lb-foot">
+    <div>
+      <p>+bureau is a directory curated by SABI<br class="br-ph"> for the world of consumer enterprise and luxury.<br>Selected by hand, not exhaustive.</p>
+      <p class="c">© 2026 SABI LDN</p>
+    </div>
+    <div class="lb-foot-r"><span class="lb-clock" id="lbClock"></span><button type="button" class="lb-mode" id="lbMode">Light mode</button></div>
+  </div>
+</div>
+
+
 <footer class="foot">
   <div>
     <p>+bureau is a directory curated by SABI<br class="br-ph"> for the world of consumer enterprise and luxury.<br>Selected by hand, not exhaustive.</p>
@@ -300,6 +408,7 @@ var CONFIG = {
   PAGE_SIZE: 10,
   MAX_BOOKMARKS: 50
 };
+var DIR='#/directory';   /* the directory's own address; '#/' is the +bureau homepage */
 
 var CATS = ['Public Relations & Communications', 'Media', 'Creative Content & Production', 'Events', 'Space', 'Networking & Community', 'Human Resources & Education', 'Consulting & Mentoring', 'Consumer & Market Insights', 'Sales & Merchandising', 'Curation & Sourcing', 'Finance', 'Legal', 'Environment & Sustainability'];
 var TAGS = ['Art & Design', 'Fashion', 'Beauty & Cosmetics', 'Health & Wellness', 'Sports', 'Food & Beverage', 'Hospitality', 'Travel', 'Automotive', 'Technology', 'AI', 'Virtual Reality (VR) & Augmented Reality (AR)', 'Website', 'E-commerce', 'Retail', 'Wholesale', 'Showroom', 'Sample sales', 'Trade show', 'Resale', 'Vintage & Antiques', 'Shipping & fulfilment', 'Storage', 'Exhibition space', 'Advertising', 'Brand partnerships', 'Social Media', 'Influencer marketing', 'Affiliate marketing', 'Email marketing', 'Newsletter', 'Editorial', 'Translation', 'Books & Publishing', 'Press & News', 'Media training', 'Content production', 'Music', 'Photography & Videography', 'Studio space', 'Creative direction', 'Casting', 'Model management', 'Talent management', 'Entertainment', 'Trend forecasting', 'Research', 'Consulting', 'Mentoring', 'Business accelerator', 'Grants & Awards', 'Venture Capital', 'Private Equity', 'Investor', 'Real estate', 'Accounting', 'Tax', 'Licensing', 'Intellectual property', 'Quality, Safety & Compliance', 'Certification', 'Employee Training', 'Job board', 'Appointments', 'Recruitment', 'Office resources', 'Coworking space', 'Meeting space', "Members' club", 'Private transport'];
@@ -525,7 +634,7 @@ function toggle(type,v){
 document.addEventListener('click',function(e){
   var b=e.target.closest('[data-type]'); if(!b||b.disabled)return;
   if(b.closest('#v-search')) toggle(b.dataset.type,b.dataset.v);
-  else if(b.closest('#resultsBox')&&b.classList.contains('chip')) { toggle(b.dataset.type,b.dataset.v); if(keys(selCats).length>=CONFIG.MIN_CATEGORIES){ shown=CONFIG.PAGE_SIZE; renderResults(); } else location.hash='#/'; }
+  else if(b.closest('#resultsBox')&&b.classList.contains('chip')) { toggle(b.dataset.type,b.dataset.v); if(keys(selCats).length>=CONFIG.MIN_CATEGORIES){ shown=CONFIG.PAGE_SIZE; renderResults(); } else location.hash=DIR; }
 });
 /* ═══ "See results" transition: the SABI asterisk spins (gently speeding up) for 1.3s under the header, slowing to a stop, then fades out to the results ═══ */
 var loading=false;
@@ -581,7 +690,7 @@ function renderResults(){
   shown=Math.min(Math.max(shown,CONFIG.PAGE_SIZE),Math.max(lastResults.length,CONFIG.PAGE_SIZE));
   var rows=lastResults.slice(0,shown).map(rowHtml).join('');
   $('resultsBox').innerHTML=
-    '<div class="r-top"><div><a class="back" href="#/">← Refine search</a><h1 class="r-title">'+lastResults.length+' '+(lastResults.length===1?'result':'results')+'</h1></div><div class="chosen">'+chips+'</div></div>'+
+    '<div class="r-top"><div><a class="back" href="'+DIR+'">← Refine search</a><h1 class="r-title">'+lastResults.length+' '+(lastResults.length===1?'result':'results')+'</h1></div><div class="chosen">'+chips+'</div></div>'+
     (lastResults.length?'<div class="rows"><div class="row hd"><span>Company</span><span>Details</span><span>Categories &amp; tags</span><span>HQ</span><span></span></div><div id="rowsBody">'+rows+'</div></div><div id="sentinel"></div>':'<p class="empty">No matches</p>');
   watchSentinel();
 }
@@ -631,13 +740,13 @@ function niceUrl(u){
   return (parts[0].toLowerCase()!=='www'&&parts.length<=n-0&&parts.length===n)?'www.'+t:t;
 }
 function renderProfile(id){
-  var c=DB[id]; if(!c){location.hash='#/';return}
+  var c=DB[id]; if(!c){location.hash=DIR;return}
   var sim=similar(c);
   var simHtml=sim.map(function(x,i){
     return '<a class="sim-i" href="#/c/'+x.o.id+'" target="_blank" rel="noopener"><span><b>'+esc(x.o.name)+'</b><p>'+esc(x.why)+'</p></span></a>';
   }).join('');
   var hasSearch=keys(selCats).length>=CONFIG.MIN_CATEGORIES;   /* no saved search (e.g. lead opened in a new tab) -> plain "Back to search" */
-  var back='<a class="back" href="'+(hasSearch?'#/results':'#/')+'">← Back to search'+(hasSearch?' results':'')+'</a>';
+  var back='<a class="back" href="'+(hasSearch?'#/results':DIR)+'">← Back to search'+(hasSearch?' results':'')+'</a>';
   var pick=function(all,sel){return all.filter(function(x){return sel[x]})};
   var dash=function(a){return a.length?esc(a.join(', ')):'—'};
   var selC=pick(c.cats,selCats), selT=pick(c.tags,selTags);
@@ -655,7 +764,7 @@ function renderProfile(id){
 /* ═══ Saved view ═══ */
 function renderSaved(){
   var a=getSaved().map(function(i){return DB[i]}).filter(Boolean);
-  $('savedBox').innerHTML='<div><a class="back" href="#/">← Search</a><h1 class="r-title">Saved ('+a.length+'/'+CONFIG.MAX_BOOKMARKS+')</h1></div>'+
+  $('savedBox').innerHTML='<div><a class="back" href="'+DIR+'">← Search</a><h1 class="r-title">Saved ('+a.length+'/'+CONFIG.MAX_BOOKMARKS+')</h1></div>'+
     (a.length?'<div class="rows">'+a.map(function(c){return rowHtml(c)}).join('')+'</div>':'<p class="empty">Nothing saved on this device yet</p>')+
     '<p class="mono" style="font-size:11px;letter-spacing:.8px;opacity:.6">Saved companies live on this device only.</p>';
 }
@@ -669,16 +778,103 @@ function loadSel(){try{var v=JSON.parse(sessionStorage.getItem('bureauSel')||'nu
 function checkExpiry(){
   if(hasSel()&&Date.now()-lastActive>SEARCH_TTL){
     selCats={};selTags={};saveSel();renderSearch();
-    if(location.hash==='#/results'||location.hash==='#/saved') location.hash='#/';
+    if(location.hash==='#/results'||location.hash==='#/saved') location.hash=DIR;
   }
 }
 function touch(){checkExpiry(); lastActive=Date.now(); if(hasSel()) saveSel()}
+/* ═══ Homepage lightbox ═══
+   Route #/ is the +bureau homepage. It opens over whichever page the visitor was on (that page is left exactly
+   as it was, scroll position included); × / Esc / the browser Back button return to it. A visit that starts on the
+   homepage returns to the directory search. Light or dark is remembered on this device. */
+var homeReturn=DIR, underHash=null, clockT=0;
+function openHome(){ location.hash='#/' }
+function closeHome(){ location.hash=homeReturn||DIR }
+function isHomeHash(h){ return h===''||h==='#'||h==='#/'||h==='#/home' }
+function lbMode(light){
+  $('home').classList.toggle('lb-light',light);
+  $('lbMode').textContent=light?'Dark mode':'Light mode';
+  var m=document.getElementById('themeColor'); if(m&&$('home').classList.contains('on')) m.setAttribute('content',light?'#FAFBE3':'#170006');
+}
+function buildHome(){
+  if(!$('lbStar').firstChild){
+    var P='M-19 0C-19-100-43-150-43-225C-43-285-28-309 0-309C28-309 43-285 43-225C43-150 19-100 19 0Z', p='';
+    for(var i=0;i<6;i++) p+='<path transform="rotate('+(i*60)+')" d="'+P+'"/>';
+    $('lbStar').innerHTML='<svg viewBox="-330 -330 660 660" xmlns="http://www.w3.org/2000/svg">'+p+'<polygon points="0,-62 54,-31 54,31 0,62 -54,31 -54,-31"/></svg>';
+  }
+}
+function tickClock(){
+  try{ $('lbClock').textContent='London '+new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/London',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date()) }catch(e){}
+}
+var starTurn=0;
+function starSnap(){ var s=$('lbStar').firstChild; if(!s)return; starTurn+=30; s.style.transform='rotate('+starTurn+'deg)'; }
+/* the asterisk drifts gently and is nudged away when the cursor comes near */
+var floatRaf=0, mouse=null, fp={x:0,y:0,vx:0,vy:0,wx:0,wy:0,last:0,init:false};
+function floatStep(t){
+  var st=document.querySelector('.lb-stage'), el=$('lbStar'), rc=st.getBoundingClientRect(), sz=el.offsetWidth;
+  var bx=Math.max(0,rc.width/2-sz/2-8), by=Math.max(0,rc.height/2-sz/2-8);
+  var dt=Math.min((t-(fp.last||t))/1000,.05); fp.last=t;
+  function way(){ fp.wx=(Math.random()*2-1)*bx; fp.wy=(Math.random()*2-1)*by }
+  if(!fp.init){ fp.init=true; way() }
+  /* resting drift: a slow wander towards random spots across the whole empty space */
+  var rx=fp.wx-fp.x, ry=fp.wy-fp.y, rd=Math.sqrt(rx*rx+ry*ry)||1;
+  if(rd<24) way();
+  var dvx=rx/rd*18, dvy=ry/rd*18;
+  /* cursor near: pushed away, gently, but quicker than the resting drift */
+  if(mouse){
+    var cx=rc.left+rc.width/2+fp.x, cy=rc.top+rc.height/2+fp.y, mx=cx-mouse.x, my=cy-mouse.y, d=Math.sqrt(mx*mx+my*my)||1, R=sz*.9+70;
+    if(d<R){ var k=(1-d/R)*90; dvx+=mx/d*k; dvy+=my/d*k; }
+  }
+  var e=Math.min(1,dt*2.5); fp.vx+=(dvx-fp.vx)*e; fp.vy+=(dvy-fp.vy)*e;
+  fp.x+=fp.vx*dt; fp.y+=fp.vy*dt;
+  if(fp.x>bx||fp.x<-bx){ fp.x=Math.max(-bx,Math.min(bx,fp.x)); fp.vx*=-.3; way() }
+  if(fp.y>by||fp.y<-by){ fp.y=Math.max(-by,Math.min(by,fp.y)); fp.vy*=-.3; way() }
+  el.style.translate=fp.x.toFixed(1)+'px '+fp.y.toFixed(1)+'px';
+  floatRaf=requestAnimationFrame(floatStep);
+}
+function floatOn(on){
+  cancelAnimationFrame(floatRaf); fp.last=0;
+  if(on&&!(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches)) floatRaf=requestAnimationFrame(floatStep);
+}
+function showHome(on){
+  var h=$('home'); h.classList.toggle('on',on); h.setAttribute('aria-hidden',on?'false':'true');
+  document.documentElement.classList.toggle('lb-open',on);
+  clearInterval(clockT); floatOn(on);
+  if(on){ buildHome(); lbMode(h.classList.contains('lb-light')); tickClock(); clockT=setInterval(tickClock,1000); setTimeout(function(){h.focus({preventScroll:true})},60); }
+  else { $('lbDesc').classList.remove('on'); var mb=$('menuBtn'); if(mb) try{mb.focus({preventScroll:true})}catch(e){} window.dispatchEvent(new Event('scroll')); }
+}
+(function(){
+  try{ if(localStorage.getItem('bureau.lbMode')==='light') $('home').classList.add('lb-light') }catch(e){}
+  $('home').addEventListener('pointermove',function(e){mouse={x:e.clientX,y:e.clientY}});
+  $('home').addEventListener('pointerleave',function(){mouse=null});
+  $('menuBtn').addEventListener('click',openHome);
+  $('homeClose').addEventListener('click',closeHome);
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&$('home').classList.contains('on')) closeHome() });
+  $('lbDir').addEventListener('click',function(){ homeReturn=DIR; closeHome() });
+  $('lbMode').addEventListener('click',function(){
+    var light=!$('home').classList.contains('lb-light'); lbMode(light);
+    try{ localStorage.setItem('bureau.lbMode',light?'light':'dark') }catch(e){}
+  });
+  /* hovering (or focusing) a menu item shows what it is */
+  var d=$('lbDesc');
+  function say(e){ var b=e.target.closest('.lb-item'); if(!b)return; d.textContent=b.getAttribute('data-desc'); d.classList.add('on'); starSnap() }
+  function hush(e){ if(!e.relatedTarget||!e.relatedTarget.closest||!e.relatedTarget.closest('.lb-item')) d.classList.remove('on') }
+  $('lbMenu').addEventListener('pointerover',say); $('lbMenu').addEventListener('focusin',say);
+  $('lbMenu').addEventListener('pointerout',hush); $('lbMenu').addEventListener('focusout',hush);
+})();
+
 function route(){
   saveSel();
-  var h=location.hash||'#/', m;
+  var h=location.hash, m, wasHome=$('home').classList.contains('on');
+  if(isHomeHash(h)){
+    if(underHash===null){ renderSearch(); document.querySelectorAll('.view').forEach(function(v){v.classList.remove('on')}); document.body.classList.add('is-search'); $('v-search').classList.add('on'); underHash=DIR; }
+    homeReturn=underHash;   /* × goes back to the page this was opened from */
+    showHome(true); return;
+  }
+  if(wasHome){ showHome(false); if(h===underHash) return; }   /* closing back to the page that is already underneath: leave it (and its scroll position) untouched */
+  underHash=h;
   document.querySelectorAll('.view').forEach(function(v){v.classList.remove('on')});
   var view='search';
-  if(h==='#/results'){ if(keys(selCats).length<CONFIG.MIN_CATEGORIES){location.hash='#/';return} view='results'; renderResults(); }
+  if(h==='#/results'){ if(keys(selCats).length<CONFIG.MIN_CATEGORIES){location.hash=DIR;return} view='results'; renderResults(); }
   else if(m=h.match(/^#\/c\/(\d+)$/)){ view='profile'; renderProfile(+m[1]); }
   else if(h==='#/saved'){ view='saved'; renderSaved(); }
   else renderSearch();
