@@ -260,21 +260,20 @@ html.lb-open,html.lb-open body{overflow:hidden}
 .lightbox-overlay.on .lb-body,.lightbox-overlay.on .lb-foot{opacity:1}
 .lb-left{overflow-y:auto;padding:20px 0 28px;scrollbar-width:none;display:flex;flex-direction:column}
 .lb-left::-webkit-scrollbar{display:none}
-.lb-logo{font-family:var(--font-logo);font-weight:400;font-size:30px;line-height:1;text-transform:lowercase;margin:0;letter-spacing:0;text-decoration:none}   /* same size and place as the +bureau on the directory header */
-.lb-menu{list-style:none;display:flex;flex-direction:column;gap:10px;margin-top:auto}
-.lb-item{display:flex;justify-content:flex-start;align-items:baseline;gap:14px;text-align:left;padding:4px 0;font-family:var(--font-body);font-weight:300;font-size:11px;line-height:1.4;letter-spacing:1.4px;text-transform:uppercase}
-.lb-name{transition:transform .35s cubic-bezier(.3,1.4,.4,1)}
-.lb-item:hover .lb-name,.lb-item:focus-visible .lb-name{transform:translateX(8px)}
+.lb-logo{align-self:flex-start;font-family:var(--font-logo);font-weight:400;font-size:30px;line-height:1;text-transform:lowercase;margin:0;letter-spacing:0;text-decoration:none}   /* same size and place as the +bureau on the directory header */
+.lb-menu{list-style:none;display:flex;flex-direction:column;gap:10px;margin-top:auto;align-self:flex-start}
+.lb-item{display:flex;justify-content:flex-start;align-items:baseline;gap:14px;text-align:left;padding:4px 0;font-family:var(--font-body);font-weight:500;font-size:11px;line-height:1.4;letter-spacing:1.4px;text-transform:uppercase}
 .lb-meta{opacity:.55}
 .lb-item[aria-disabled=true]{cursor:default}
-.lb-item[aria-disabled=true] .lb-name{opacity:.55}
+@media(hover:hover){.lb-meta{opacity:0;transition:opacity .25s ease}.lb-item:hover .lb-meta,.lb-item:focus-visible .lb-meta{opacity:.55}}   /* "soon" appears on hover (always shown on touch screens) */
 .lightbox-overlay .lb-item:hover{opacity:1}
 .lb-d{display:none}
 .lb-stage{position:relative;display:grid;place-items:center;min-width:0}
 .lb-star{width:min(18.2vh,35%);aspect-ratio:1;display:grid;place-items:center;animation:lbSpin 60s linear infinite}
+.lightbox-overlay.lb-light .lb-star svg{fill:#000}
 .lb-star svg{width:100%;height:100%;fill:var(--lb-fg);transition:transform .7s cubic-bezier(.3,1.5,.4,1)}
 @keyframes lbSpin{to{transform:rotate(360deg)}}
-.lb-desc{position:absolute;right:0;top:50%;transform:translateY(-50%);max-width:30ch;text-align:left;color:#fff;mix-blend-mode:difference;font-style:italic;font-family:var(--font-body);font-weight:300;font-size:16px;line-height:1.5;opacity:0;transition:opacity .25s ease;pointer-events:none}
+.lb-desc{position:absolute;right:0;top:50%;transform:translateY(-50%);width:30ch;min-height:8em;text-align:left;color:var(--lb-fg);font-style:italic;font-family:var(--font-body);font-weight:300;font-size:16px;line-height:1.5;opacity:0;transition:opacity .25s ease;pointer-events:none}
 .lb-desc.on{opacity:1}
 .lb-nav{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding:32px 0 28px;font-size:13px;letter-spacing:1.6px;text-transform:uppercase}
 .lb-nav>*{writing-mode:vertical-rl;white-space:nowrap}
@@ -808,26 +807,51 @@ function tickClock(){
 var starTurn=0;
 function starSnap(){ var s=$('lbStar').firstChild; if(!s)return; starTurn+=30; s.style.transform='rotate('+starTurn+'deg)'; }
 /* the asterisk drifts gently and is nudged away when the cursor comes near */
-var floatRaf=0, mouse=null, fp={x:0,y:0,vx:0,vy:0,wx:0,wy:0,last:0,init:false};
+var floatRaf=0, mouse=null, fp={x:0,y:0,vx:0,vy:0,wx:0,wy:0,wt:0,last:0,init:false};
 function floatStep(t){
-  var st=document.querySelector('.lb-stage'), el=$('lbStar'), rc=st.getBoundingClientRect(), sz=el.offsetWidth;
-  var bx=Math.max(0,rc.width/2-sz/2-8), by=Math.max(0,rc.height/2-sz/2-8);
+  var el=$('lbStar'), st=document.querySelector('.lb-stage'), sr=st.getBoundingClientRect(), sz=el.offsetWidth, rad=sz/2;
+  var wide=innerWidth>1000;   /* PC: the whole page. Phone: just the star's own band, so it never floats over the text */
+  var area=wide?document.querySelector('.lb-body').getBoundingClientRect():sr;
+  var sx=sr.left+sr.width/2, sy=sr.top+sr.height/2;
+  var x0=area.left+rad+10-sx, x1=area.right-rad-10-sx, y0=area.top+rad+10-sy, y1=area.bottom-rad-10-sy;
+  if(x1<x0) x0=x1=(x0+x1)/2; if(y1<y0) y0=y1=(y0+y1)/2;
+  /* things it must float around, never over */
+  var obs=[];
+  if(wide) [['.lb-logo',22],['.lb-menu',22],['#lbDesc',28],['.lb-nav a',22]].forEach(function(o){
+    var n=document.querySelector(o[0]); if(!n||getComputedStyle(n).display==='none') return;
+    var q=n.getBoundingClientRect(); if(q.width>0) obs.push({l:q.left,r:q.right,t:q.top,b:q.bottom,p:o[1]});
+  });
   var dt=Math.min((t-(fp.last||t))/1000,.05); fp.last=t;
-  function way(){ fp.wx=(Math.random()*2-1)*bx; fp.wy=(Math.random()*2-1)*by }
+  function clearOf(px,py){ var X=sx+px, Y=sy+py; for(var i=0;i<obs.length;i++){ var o=obs[i]; if(X>o.l-rad-o.p&&X<o.r+rad+o.p&&Y>o.t-rad-o.p&&Y<o.b+rad+o.p) return false } return true }
+  function way(){ fp.wt=t; for(var i=0;i<40;i++){ fp.wx=x0+Math.random()*(x1-x0); fp.wy=y0+Math.random()*(y1-y0); if(clearOf(fp.wx,fp.wy)&&Math.hypot(fp.wx-fp.x,fp.wy-fp.y)>Math.min(420,(x1-x0)*.4)) break } }
   if(!fp.init){ fp.init=true; way() }
+  if(t-fp.wt>25000) way();
   /* resting drift: a slow wander towards random spots across the whole empty space */
   var rx=fp.wx-fp.x, ry=fp.wy-fp.y, rd=Math.sqrt(rx*rx+ry*ry)||1;
-  if(rd<24) way();
-  var dvx=rx/rd*18, dvy=ry/rd*18;
+  if(rd<30) way();
+  var dvx=rx/rd*36, dvy=ry/rd*36;
   /* cursor near: pushed away, gently, but quicker than the resting drift */
   if(mouse){
-    var cx=rc.left+rc.width/2+fp.x, cy=rc.top+rc.height/2+fp.y, mx=cx-mouse.x, my=cy-mouse.y, d=Math.sqrt(mx*mx+my*my)||1, R=sz*.9+70;
+    var mx=sx+fp.x-mouse.x, my=sy+fp.y-mouse.y, d=Math.sqrt(mx*mx+my*my)||1, R=sz*.9+70;
     if(d<R){ var k=(1-d/R)*90; dvx+=mx/d*k; dvy+=my/d*k; }
   }
+  /* steer round the obstacles */
+  obs.forEach(function(o){
+    var ax=sx+fp.x, ay=sy+fp.y, qx=Math.max(o.l,Math.min(o.r,ax)), qy=Math.max(o.t,Math.min(o.b,ay));
+    var ex=ax-qx, ey=ay-qy, ed=Math.sqrt(ex*ex+ey*ey); if(ed===0){ ex=ax-(o.l+o.r)/2; ey=ay-(o.t+o.b)/2; ed=Math.sqrt(ex*ex+ey*ey)||1 }
+    var reach=rad+o.p+60; if(ed<reach){ var kk=(1-ed/reach)*70; dvx+=ex/ed*kk; dvy+=ey/ed*kk }
+  });
   var e=Math.min(1,dt*2.5); fp.vx+=(dvx-fp.vx)*e; fp.vy+=(dvy-fp.vy)*e;
   fp.x+=fp.vx*dt; fp.y+=fp.vy*dt;
-  if(fp.x>bx||fp.x<-bx){ fp.x=Math.max(-bx,Math.min(bx,fp.x)); fp.vx*=-.3; way() }
-  if(fp.y>by||fp.y<-by){ fp.y=Math.max(-by,Math.min(by,fp.y)); fp.vy*=-.3; way() }
+  if(fp.x>x1||fp.x<x0){ fp.x=Math.max(x0,Math.min(x1,fp.x)); fp.vx*=-.3; way() }
+  if(fp.y>y1||fp.y<y0){ fp.y=Math.max(y0,Math.min(y1,fp.y)); fp.vy*=-.3; way() }
+  /* hard stop: if it is ever too close to something, move it out */
+  obs.forEach(function(o){
+    var ax=sx+fp.x, ay=sy+fp.y, qx=Math.max(o.l,Math.min(o.r,ax)), qy=Math.max(o.t,Math.min(o.b,ay));
+    var gx=ax-qx, gy=ay-qy, gd=Math.sqrt(gx*gx+gy*gy), need=rad+o.p;
+    if(gd<need){ if(gd===0){ gx=ax-(o.l+o.r)/2; gy=ay-(o.t+o.b)/2; gd=Math.sqrt(gx*gx+gy*gy)||1 }
+      fp.x+=gx/gd*(need-gd); fp.y+=gy/gd*(need-gd); var inn=fp.vx*gx/gd+fp.vy*gy/gd; if(inn<0){fp.vx-=inn*gx/gd; fp.vy-=inn*gy/gd} way() }
+  });
   el.style.translate=fp.x.toFixed(1)+'px '+fp.y.toFixed(1)+'px';
   floatRaf=requestAnimationFrame(floatStep);
 }
