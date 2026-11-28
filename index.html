@@ -289,23 +289,23 @@ html.lb-open,html.lb-open body{overflow:hidden}
 @media(prefers-reduced-motion:reduce){.lb-star{animation:none}.lightbox-overlay,.lightbox-overlay.on{transition:none}}
 @media(max-width:1000px){
   .lightbox-overlay{overflow-y:auto}
-  .lb-top{position:sticky;top:0;background:var(--lb-bg);z-index:2;font-size:11px;letter-spacing:1.2px}
+  .lb-top{position:sticky;top:0;background:var(--lb-bg);z-index:2;font-size:12.5px;letter-spacing:1.4px}
   .lb-top .lb-pw,.lb-top .lb-tag{display:none}
   .lb-close{margin-left:auto}
-  .lb-body{display:flex;flex-direction:column;gap:0;padding:0 var(--gutter) 8px;overflow:visible;flex:none;border-top:0}
+  .lb-body{display:flex;flex-direction:column;gap:0;padding:0 var(--gutter) 8px;overflow:visible;flex:1 0 auto;border-top:0}
   .lb-left{display:contents}
   .lb-logo{order:1;font-size:26px;margin:13px 0 40px}
   .lb-menu{order:2}
-  .lb-menu{gap:22px}
+  .lb-menu{gap:22px;margin-top:0}
   .lb-item{font-size:12px;padding:6px 0 8px}
-  .lb-d{display:block;font-style:italic;font-family:var(--font-body);font-weight:300;font-size:12px;line-height:1.55;max-width:38ch;opacity:.85}
+  .lb-d{display:block;font-style:italic;font-family:var(--font-body);font-weight:300;font-size:12px;line-height:1.55;width:50vw;max-width:none;opacity:.85}   /* text box is half the width of the screen */
   .lb-stage{order:3;padding:44px 0 36px;display:flex;flex-direction:column;align-items:center}
   .lb-star{width:min(13.65vw,56px)}
   .lb-desc{display:none}
   .lb-body{position:relative}
   .lb-nav{position:absolute;top:13px;right:var(--gutter);margin:0;height:26px;padding:0;align-items:center}
   .lb-login{writing-mode:horizontal-tb;font-size:12.5px;letter-spacing:1.4px}
-  .lb-clockbox{position:static;order:5;align-self:flex-end;padding-bottom:28px}
+  .lb-clockbox{position:static;order:5;align-self:flex-end;margin-top:auto;padding-bottom:20px}
   .lb-foot{flex-direction:column;align-items:flex-start;gap:20px;margin-top:auto;padding:28px var(--gutter)}   /* footer sits at the bottom of the screen with the same 28px under it as the other pages */
 }
 </style>
