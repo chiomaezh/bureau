@@ -200,7 +200,7 @@ body.is-search main,body.is-search .view.on{min-height:0}
   .row .ds{margin-bottom:18px}   /* details -> metadata gap: 24px */
   .row .nm{margin-bottom:3.5px}   /* space under the company name: 7px -> 10.5px (+50%) */
   .row .nm{order:-3}.row .ds{order:-2}.row .m:nth-child(4){order:-1}   /* phone: name, details, HQ, then categories & tags */
-  .row .m:nth-child(4){margin-bottom:18px;opacity:1}   /* HQ line: location in full black; 24px above it and 24px below it */
+  .row .m:nth-child(4){margin-bottom:12.6px;opacity:1}   /* HQ line: location in full black; 24px above it and 12.6px below it (30% less) */
   .row .hql{display:inline;margin-right:24px;opacity:.8}   /* "HQ" label in the same muted mono style as the categories & tags line */   /* 12px between HQ and categories & tags */
   .row:not(.hd){padding-bottom:54px}                 /* space under the last piece of metadata: 54px */
   .row .m:empty{display:none}   /* phone: an empty Ethos / HQ leaves no gap */
@@ -241,7 +241,8 @@ body.is-search main,body.is-search .view.on{min-height:0}
 .menu-btn:hover{opacity:1}
 @media(min-width:1001px){.strip .s2{margin-left:auto;margin-right:28px}}
 @media(max-width:1000px){.menu-btn{position:absolute;right:var(--gutter);top:50%;transform:translateY(-50%)}}
-@media(max-width:1000px){.strip{height:auto;min-height:calc(36px + env(safe-area-inset-top,0px));padding:6px 100px 6px var(--gutter);justify-items:start;text-align:left;line-height:1.4}}
+/* phone / tablet: just "powered by sabi.london" on the left and Menu on the right, at the same size as Log in */
+@media(max-width:1000px){.strip{font-size:12.5px;letter-spacing:1.4px;justify-items:start;text-align:left}.strip .s1{display:none}.strip .s2{animation:none;opacity:1;visibility:visible}}
 
 .lightbox-overlay{position:fixed;inset:0;z-index:100;--lb-bg:var(--dark);--lb-fg:var(--bg);--lb-line:rgba(250,251,227,.35);background:var(--lb-bg);color:var(--lb-fg);font-family:var(--font-mono);font-weight:300;display:flex;flex-direction:column;overflow:hidden;visibility:hidden;clip-path:inset(0 0 100% 0);transition:clip-path .5s cubic-bezier(.7,0,.2,1),visibility 0s .5s}
 .lightbox-overlay.instant,.lightbox-overlay.instant *{transition:none!important}   /* arriving straight on the homepage: no drop-down */
@@ -270,7 +271,7 @@ html.lb-open,html.lb-open body{overflow:hidden}
 .lightbox-overlay .lb-item:hover{opacity:1}
 .lb-d{display:none}
 .lb-stage{position:relative;display:grid;place-items:center;min-width:0}
-.lb-star{width:min(12.74vh,24.5%);aspect-ratio:1;display:grid;place-items:center;animation:lbSpin 60s linear infinite}
+.lb-star{width:min(12.74vh,24.5%);aspect-ratio:1;display:grid;place-items:center}
 .lightbox-overlay.lb-light .lb-star svg{fill:#000}
 .lb-star svg{width:100%;height:100%;fill:var(--lb-fg);transition:transform .7s cubic-bezier(.3,1.5,.4,1)}
 @keyframes lbSpin{to{transform:rotate(360deg)}}
@@ -809,7 +810,7 @@ function tickClock(){
 var starTurn=0;
 function starSnap(){ var s=$('lbStar').firstChild; if(!s)return; starTurn+=30; s.style.transform='rotate('+starTurn+'deg)'; }
 /* the asterisk drifts gently and is nudged away when the cursor comes near */
-var floatRaf=0, mouse=null, fp={x:0,y:0,vx:0,vy:0,wx:0,wy:0,wt:0,last:0,init:false};
+var floatRaf=0, mouse=null, fp={x:0,y:0,vx:0,vy:0,wx:0,wy:0,wt:0,last:0,init:false,ang:0,om:6,pm:null,pt:0,ms:-1,mr:0};
 function edgeOut(o,ax,ay){   /* unit direction and distance to the nearest side of a box that contains the point */
   var c=[[ -1,0,ax-o.l ],[ 1,0,o.r-ax ],[ 0,-1,ay-o.t ],[ 0,1,o.b-ay ]], m=c[0];
   for(var i=1;i<4;i++) if(c[i][2]<m[2]) m=c[i];
@@ -837,6 +838,23 @@ function floatStep(t){
   var rx=fp.wx-fp.x, ry=fp.wy-fp.y, rd=Math.sqrt(rx*rx+ry*ry)||1;
   if(rd<30) way();
   var dvx=rx/rd*36, dvy=ry/rd*36;
+  /* spin: it turns slowly on its own; trace a circle round it with the cursor and it is dragged round like a wheel,
+     in your direction and at roughly your speed (capped so it still feels like it is floating), then eases back */
+  var cxs=sx+fp.x, cys=sy+fp.y, spinTo=null;
+  if(mouse){
+    var svx=mouse.x-cxs, svy=mouse.y-cys, sdd=Math.sqrt(svx*svx+svy*svy);
+    if(sdd<rad+110&&sdd>rad*.25){
+      if(mouse.s!==fp.ms){
+        if(fp.pm){
+          var dth=Math.atan2(fp.pm[0]*svy-fp.pm[1]*svx, fp.pm[0]*svx+fp.pm[1]*svy), dtm=(t-fp.pt)/1000;
+          if(Math.abs(dth)<1.3&&dtm>0){ fp.mr=fp.mr*.7+(dth*57.3/dtm)*.3; spinTo=Math.max(-150,Math.min(150,fp.mr*.8)) }
+        }
+        fp.pm=[svx,svy]; fp.pt=t; fp.ms=mouse.s;
+      }
+    } else { fp.pm=null; fp.mr=0 }
+  } else { fp.pm=null; fp.mr=0 }
+  if(spinTo!==null) fp.om+=(spinTo-fp.om)*Math.min(1,dt*4); else fp.om+=(6-fp.om)*Math.min(1,dt*.45);
+  fp.ang+=fp.om*dt; el.style.rotate=fp.ang.toFixed(1)+'deg';
   /* cursor near: pushed away, gently, but quicker than the resting drift */
   if(mouse){
     var mx=sx+fp.x-mouse.x, my=sy+fp.y-mouse.y, d=Math.sqrt(mx*mx+my*my)||1, R=sz*.9+70;
@@ -878,7 +896,7 @@ function showHome(on){
 }
 (function(){
   try{ if(localStorage.getItem('bureau.lbMode')==='light') $('home').classList.add('lb-light') }catch(e){}
-  $('home').addEventListener('pointermove',function(e){mouse={x:e.clientX,y:e.clientY}});
+  $('home').addEventListener('pointermove',function(e){mouse={x:e.clientX,y:e.clientY,s:(mouse?mouse.s:0)+1}});
   $('home').addEventListener('pointerleave',function(){mouse=null});
   $('menuBtn').addEventListener('click',openHome);
   $('homeClose').addEventListener('click',closeHome);
