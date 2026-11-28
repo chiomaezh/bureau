@@ -244,6 +244,7 @@ body.is-search main,body.is-search .view.on{min-height:0}
 @media(max-width:1000px){.strip{height:auto;min-height:calc(36px + env(safe-area-inset-top,0px));padding:6px 100px 6px var(--gutter);justify-items:start;text-align:left;line-height:1.4}}
 
 .lightbox-overlay{position:fixed;inset:0;z-index:100;--lb-bg:var(--dark);--lb-fg:var(--bg);--lb-line:rgba(250,251,227,.35);background:var(--lb-bg);color:var(--lb-fg);font-family:var(--font-mono);font-weight:300;display:flex;flex-direction:column;overflow:hidden;visibility:hidden;clip-path:inset(0 0 100% 0);transition:clip-path .5s cubic-bezier(.7,0,.2,1),visibility 0s .5s}
+.lightbox-overlay.instant,.lightbox-overlay.instant *{transition:none!important}   /* arriving straight on the homepage: no drop-down */
 .lightbox-overlay.on{visibility:visible;clip-path:inset(0 0 0 0);transition:clip-path .5s cubic-bezier(.7,0,.2,1),visibility 0s}
 html.lb-open,html.lb-open body{overflow:hidden}
 .lightbox-overlay.lb-light{--lb-bg:var(--bg);--lb-fg:var(--text);--lb-line:rgba(33,29,29,.35)}
@@ -256,7 +257,7 @@ html.lb-open,html.lb-open body{overflow:hidden}
 .lb-close span{line-height:1.35;background:linear-gradient(currentColor,currentColor) 0 100%/0 1px no-repeat;transition:background-size .35s ease}
 .lb-close:hover{opacity:1}
 .lb-close:hover span{background-size:100% 1px}
-.lb-body{flex:1;min-height:0;display:grid;grid-template-columns:minmax(278px,25.4%) 1fr 56px;gap:var(--gutter);padding:0 var(--gutter);border-top:.5px solid var(--lb-line);opacity:0;transition:opacity .35s ease .2s}
+.lb-body{position:relative;flex:1;min-height:0;display:grid;grid-template-columns:minmax(278px,25.4%) 1fr 56px;gap:var(--gutter);padding:0 var(--gutter);border-top:.5px solid var(--lb-line);opacity:0;transition:opacity .35s ease .2s}
 .lightbox-overlay.on .lb-body,.lightbox-overlay.on .lb-foot{opacity:1}
 .lb-left{overflow-y:auto;padding:20px 0 28px;scrollbar-width:none;display:flex;flex-direction:column}
 .lb-left::-webkit-scrollbar{display:none}
@@ -269,20 +270,19 @@ html.lb-open,html.lb-open body{overflow:hidden}
 .lightbox-overlay .lb-item:hover{opacity:1}
 .lb-d{display:none}
 .lb-stage{position:relative;display:grid;place-items:center;min-width:0}
-.lb-star{width:min(18.2vh,35%);aspect-ratio:1;display:grid;place-items:center;animation:lbSpin 60s linear infinite}
+.lb-star{width:min(12.74vh,24.5%);aspect-ratio:1;display:grid;place-items:center;animation:lbSpin 60s linear infinite}
 .lightbox-overlay.lb-light .lb-star svg{fill:#000}
 .lb-star svg{width:100%;height:100%;fill:var(--lb-fg);transition:transform .7s cubic-bezier(.3,1.5,.4,1)}
 @keyframes lbSpin{to{transform:rotate(360deg)}}
-.lb-desc{position:absolute;right:0;top:50%;transform:translateY(-50%);width:30ch;min-height:8em;text-align:left;color:var(--lb-fg);font-style:italic;font-family:var(--font-body);font-weight:300;font-size:16px;line-height:1.5;opacity:0;transition:opacity .25s ease;pointer-events:none}
+.lb-desc{position:absolute;right:0;top:50%;transform:translateY(-50%);width:30ch;min-height:8em;text-align:left;color:var(--lb-fg);font-style:italic;font-family:var(--font-body);font-weight:300;font-size:14px;line-height:1.5;opacity:0;transition:opacity .25s ease;pointer-events:none}
 .lb-desc.on{opacity:1}
-.lb-nav{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding:32px 0 28px;font-size:13px;letter-spacing:1.6px;text-transform:uppercase}
-.lb-nav>*{writing-mode:vertical-rl;white-space:nowrap}
-.lb-nav a{text-decoration:none;font-family:var(--font-mono);font-weight:300;font-size:inherit;letter-spacing:inherit;text-transform:inherit}
-.lb-nav a:hover{text-decoration:underline;text-underline-offset:4px}
+.lb-nav{align-self:start;display:flex;justify-content:center;padding-top:20px}
+.lb-login{writing-mode:vertical-rl;white-space:nowrap;font-family:var(--font-mono);font-weight:300;font-size:13px;letter-spacing:1.6px;text-transform:uppercase;padding:0}
+.lb-login:hover{opacity:1;text-decoration:underline;text-underline-offset:4px}
+.lb-clockbox{position:absolute;right:var(--gutter);bottom:28px;display:flex;flex-direction:column;align-items:flex-end;gap:12px;font-size:11px;letter-spacing:1.2px;text-transform:uppercase}
 .lb-foot{flex:none;display:flex;justify-content:space-between;align-items:flex-end;gap:2rem;flex-wrap:wrap;padding:22px var(--gutter) 26px;border-top:.5px solid var(--lb-line);opacity:0;transition:opacity .35s ease .2s}
 .lb-foot p{font-family:var(--font-body);font-weight:400;font-size:15px;line-height:1.5}
 .lb-foot .c{font-family:var(--font-mono);font-weight:300;font-size:13px;letter-spacing:.5px;margin-top:.6rem}
-.lb-foot-r{display:flex;flex-direction:column;align-items:flex-end;gap:12px;font-size:11px;letter-spacing:1.2px;text-transform:uppercase}
 .lb-clock{font-family:var(--font-body);font-size:13px;opacity:.85}
 .lb-mode{font-family:var(--font-mono);font-weight:300;font-size:inherit;letter-spacing:inherit;text-transform:uppercase;text-decoration:underline;text-underline-offset:3px}
 @media(prefers-reduced-motion:reduce){.lb-star{animation:none}.lightbox-overlay,.lightbox-overlay.on{transition:none}}
@@ -297,14 +297,15 @@ html.lb-open,html.lb-open body{overflow:hidden}
   .lb-menu{order:2}
   .lb-menu{gap:22px}
   .lb-item{font-size:12px;padding:6px 0 8px}
-  .lb-d{display:block;font-style:italic;font-family:var(--font-body);font-weight:300;font-size:14px;line-height:1.55;max-width:38ch;opacity:.85}
+  .lb-d{display:block;font-style:italic;font-family:var(--font-body);font-weight:300;font-size:12px;line-height:1.55;max-width:38ch;opacity:.85}
   .lb-stage{order:3;padding:44px 0 36px;display:flex;flex-direction:column;align-items:center}
-  .lb-star{width:min(19.5vw,80px)}
+  .lb-star{width:min(13.65vw,56px)}
   .lb-desc{display:none}
-  .lb-nav{order:4;align-items:flex-start;justify-content:flex-start;padding:0 0 28px;font-size:11px;letter-spacing:1.2px}
-  .lb-nav>*{writing-mode:horizontal-tb}
+  .lb-body{position:relative}
+  .lb-nav{position:absolute;top:13px;right:var(--gutter);margin:0;height:26px;padding:0;align-items:center}
+  .lb-login{writing-mode:horizontal-tb;font-size:12.5px;letter-spacing:1.4px}
+  .lb-clockbox{position:static;order:5;align-self:flex-end;padding-bottom:28px}
   .lb-foot{flex-direction:column;align-items:flex-start;gap:20px}
-  .lb-foot-r{align-items:flex-start;flex-direction:row;gap:22px}
 }
 </style>
 </head>
@@ -367,19 +368,19 @@ html.lb-open,html.lb-open body{overflow:hidden}
     <div class="lb-left">
       <div class="lb-logo">+bureau</div>
       <ul class="lb-menu" id="lbMenu">
-        <li><button type="button" class="lb-item" id="lbDir" data-desc="Find companies, services and resources across consumer enterprise and luxury. Choose up to three categories, then narrow your results with tags."><span class="lb-name">Directory</span></button><p class="lb-d">Find companies, services and resources across consumer enterprise and luxury. Choose up to three categories, then narrow your results with tags.</p></li>
-        <li><button type="button" class="lb-item" id="lbCal" aria-disabled="true" data-desc="A calendar of the industry’s events, launches and key dates. Coming soon."><span class="lb-name">Calendar</span><span class="lb-meta">Soon</span></button><p class="lb-d">A calendar of the industry’s events, launches and key dates. Coming soon.</p></li>
+        <li><button type="button" class="lb-item" id="lbDir" data-desc="Find companies, services and resources across consumer enterprise and luxury."><span class="lb-name">Directory</span></button><p class="lb-d">Find companies, services and resources across consumer enterprise and luxury.</p></li>
+        <li><button type="button" class="lb-item" id="lbCal" aria-disabled="true" data-desc="A calendar of the industry’s events, launches and key dates."><span class="lb-name">Calendar</span><span class="lb-meta">Coming soon</span></button><p class="lb-d">A calendar of the industry’s events, launches and key dates.</p></li>
       </ul>
     </div>
     <div class="lb-stage"><div class="lb-star" id="lbStar" aria-hidden="true"></div><p class="lb-desc" id="lbDesc" aria-live="polite"></p></div>
-    <nav class="lb-nav" aria-label="SABI"><a href="https://www.sabi.london" target="_blank" rel="noopener">sabi.london ↗</a></nav>
+    <div class="lb-clockbox"><span class="lb-clock" id="lbClock"></span><button type="button" class="lb-mode" id="lbMode">Light mode</button></div>
+    <nav class="lb-nav" aria-label="Account"><button type="button" class="lb-login" id="lbLogin"><span>Log in</span></button></nav>
   </div>
   <div class="lb-foot">
     <div>
       <p>+bureau is a directory curated by SABI<br class="br-ph"> for the world of consumer enterprise and luxury.<br>Selected by hand, not exhaustive.</p>
       <p class="c">© 2026 SABI LDN</p>
     </div>
-    <div class="lb-foot-r"><span class="lb-clock" id="lbClock"></span><button type="button" class="lb-mode" id="lbMode">Light mode</button></div>
   </div>
 </div>
 
@@ -817,7 +818,7 @@ function floatStep(t){
   if(x1<x0) x0=x1=(x0+x1)/2; if(y1<y0) y0=y1=(y0+y1)/2;
   /* things it must float around, never over */
   var obs=[];
-  if(wide) [['.lb-logo',22],['.lb-menu',22],['#lbDesc',28],['.lb-nav a',22]].forEach(function(o){
+  if(wide) [['.lb-logo',22],['.lb-menu',22],['.lb-clockbox',22],['#lbDesc',28],['.lb-nav button',22]].forEach(function(o){
     var n=document.querySelector(o[0]); if(!n||getComputedStyle(n).display==='none') return;
     var q=n.getBoundingClientRect(); if(q.width>0) obs.push({l:q.left,r:q.right,t:q.top,b:q.bottom,p:o[1]});
   });
@@ -890,9 +891,11 @@ function route(){
   saveSel();
   var h=location.hash, m, wasHome=$('home').classList.contains('on');
   if(isHomeHash(h)){
+    var firstOpen=(underHash===null);
     if(underHash===null){ renderSearch(); document.querySelectorAll('.view').forEach(function(v){v.classList.remove('on')}); document.body.classList.add('is-search'); $('v-search').classList.add('on'); underHash=DIR; }
     homeReturn=underHash;   /* × goes back to the page this was opened from */
-    showHome(true); return;
+    if(!wasHome&&firstOpen){ var hm=$('home'); hm.classList.add('instant'); showHome(true); requestAnimationFrame(function(){requestAnimationFrame(function(){hm.classList.remove('instant')})}); firstOpen=false; return }
+    firstOpen=false; showHome(true); return;
   }
   if(wasHome){ showHome(false); if(h===underHash) return; }   /* closing back to the page that is already underneath: leave it (and its scroll position) untouched */
   underHash=h;
@@ -1028,7 +1031,7 @@ loadSheet(route);
       document.body.appendChild(note);
       document.body.appendChild(cursor);
 
-      var ACTIVE_SEL = 'a, button, [role="button"], summary, label, [data-cursor="active"]';
+      var ACTIVE_SEL = 'a, button:not([aria-disabled="true"]), [role="button"], summary, label, [data-cursor="active"]';
       var NATIVE_SEL = 'input, textarea, select, [contenteditable=""], [contenteditable="true"]';
       var DARK_SEL   = '.ticker, .lightbox-overlay, .strip';
 
